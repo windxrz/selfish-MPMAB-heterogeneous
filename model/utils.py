@@ -10,7 +10,7 @@ def best_response_dynamics(N, K, mu, weights, threshold=1000):
         for i in range(N):
             k = res[i]
             w[k] -= weights[i][k]
-            r = mu * weights[i] / (w + weights[i])
+            r = mu * weights[i] / (w + weights[i] + 1e-9)
             t = np.argmax(r)
             if np.abs(r[t] - r[k]) < 1e-5:
                 w[k] += weights[i][k]
@@ -23,7 +23,14 @@ def best_response_dynamics(N, K, mu, weights, threshold=1000):
         if not flag:
             print(N, K, res)
             return True
+    w = np.zeros(K)
+    for i in range(N):
+        if i not in [0, 5, 4, 10]:
+            w[res[i]] += weights[i][res[i]]
+
+    print(N, K, res, w)
     return False
+
 
 def best_best_response_dynamics(N, K, mu, weights, threshold=1000):
     w = np.zeros(K)
@@ -38,7 +45,7 @@ def best_best_response_dynamics(N, K, mu, weights, threshold=1000):
         for i in range(N):
             k = res[i]
             w[k] -= weights[i][k]
-            r = mu * weights[i] / (w + weights[i])
+            r = mu * weights[i] / (w + weights[i] + 1e-9)
             t = np.argmax(r)
             if np.abs(r[t] - r[k]) >= 1e-5 and r[t] - r[k] > max_inc:
                 max_inc = r[t] - r[k]
@@ -46,20 +53,23 @@ def best_best_response_dynamics(N, K, mu, weights, threshold=1000):
                 kk = k
                 tt = t
             w[k] += weights[i][k]
-        
+
         if ii == -1:
             reward = []
             for i in range(N):
                 k = res[i]
-                reward.append(mu[k] * weights[i][k] / np.sum(weights[:, k] * (res == k)))
-            print(N, K, res, reward)
+                reward.append(
+                    mu[k] * weights[i][k] / np.sum(weights[:, k] * (res == k))
+                )
+            # print(N, K, res + 1, reward)
             return True
         else:
             w[kk] -= weights[ii][kk]
-            r = mu * weights[ii] / (w + weights[ii])
+            r = mu * weights[ii] / (w + weights[ii] + 1e-9)
             w[tt] += weights[ii][tt]
             res[ii] = tt
     return False
+
 
 def main():
     z = 0
@@ -85,8 +95,42 @@ def main():
         ]
     )
 
+    # N, K = 4, 4
+    # mu = np.array([0.02, 1, 1.1, 0.8])
+    # weights = np.array(
+    #     [[1, 0.2, 0, 0], [0, 0.8, 0, 0.9], [0, 0, 0.2, 0.1], [0, 10, 0.8, 0]]
+    # )
+
+    N, K = 7, 5
+
+    mu = np.array([0.84538588, 0.08993399, 0.02328485, 0.41458564, 0.20688417])
+    weights = np.array(
+        [
+            [5.18598184, 0, 0, 0, 0],
+            [0, 0, 0, 1.3919881, 0],
+            [0, 0, 0, 0, 0.97509145],
+            [0.85953784, 0, 0, 0.80106269, 0],
+            [0, 0.01420995, 0, 0, 0.54831471],
+            [0, 0, 0, 0.58696091, 0.92798576],
+            [0, 0.45314008, 0, 0.56469558, 0],
+        ]
+    )
+
     print(best_best_response_dynamics(N, K, mu, weights))
-    # return
+    return
+
+    mu = np.array([0.84538588, 0.08993399, 0.02328485, 0.41458564, 0.20688417])
+    weights = np.array(
+        [
+            [5.18598184, 0, 0, 0, 0],
+            [0, 0, 0, 1.3919881, 0],
+            [0, 0, 0, 0, 0.97509145],
+            [0.85953784, 0, 0, 0.80106269, 0],
+            [0, 0.01420995, 0, 0, 0.54831471],
+            [0, 0, 0, 0.58696091, 0.92798576],
+            [0, 0.45314008, 0, 0.56469558, 0],
+        ]
+    )
     while True:
         K = np.random.randint(2, 20)
         N = np.random.randint(K // 2, K * 3)
@@ -95,7 +139,8 @@ def main():
         if not best_best_response_dynamics(N, K, mu, weights):
             break
         z += 1
-        print(z)
+        if z % 100 == 0:
+            print(z)
     print(N, K, mu, weights)
 
 
