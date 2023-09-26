@@ -35,7 +35,7 @@ def calculate_payoff(weights, rewards, strategy):
     return payoffs
 
 
-def find_pne(weights, rewards):
+def find_pne(weights, rewards, isprint=False):
     """
     Find the most efficient Pure Nash Equilibrium.
 
@@ -97,7 +97,8 @@ def find_pne(weights, rewards):
                 first_payoff = total_payoff
             elif abs(total_payoff - first_payoff) > 1e-5:
                 multiple_pne = True
-            print("PNE", strategy, total_payoff, delta_1)
+            if isprint:
+                print("PNE", strategy, total_payoff, delta_1)
             if delta_1 <= best_delta_1:
                 # if total_payoff >= best_total_payoff and delta_1 <= best_delta_1:
                 best_total_payoff = total_payoff
@@ -107,20 +108,22 @@ def find_pne(weights, rewards):
                 best_total_payoff = total_payoff
         else:
             no_pne.append((sum(current_payoffs), delta_2))
-            print("No PNE", strategy, sum(current_payoffs), delta_2)
+            if isprint:
+                print("No PNE", strategy, sum(current_payoffs), delta_2)
 
     return best_pne, best_total_payoff, best_delta_1, no_pne, multiple_pne
 
 
-def calculate_delta(weights, rewards):
+def calculate_delta(weights, rewards, isprint=False):
     best_pne, best_total_payoff, best_delta_pne, no_pne, multiple_pne = find_pne(
-        weights, rewards
+        weights, rewards, isprint
     )
 
     l = [ele[1] for ele in no_pne if ele[0] >= best_total_payoff - 1e-5]
     delta_nopne = min(l) if len(l) > 0 else 100
 
-    print(best_pne, best_total_payoff, best_delta_pne, delta_nopne)
+    if isprint:
+        print(best_pne, best_total_payoff, best_delta_pne, delta_nopne)
     return best_delta_pne, delta_nopne, min(best_delta_pne, delta_nopne)
 
 

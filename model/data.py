@@ -36,7 +36,8 @@ class Loop:
             
             print(self.weights)
 
-            delta_pne, delta_nopne, self.delta = calculate_delta(self.weights, self.mu)
+            # delta_pne, delta_nopne, self.delta = calculate_delta(self.weights, self.mu)
+            delta_pne, delta_nopne, self.delta = 1, 1, 1
             print("delta:", delta_pne, delta_nopne, self.delta)
             if delta_pne < 500:
                 break
