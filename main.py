@@ -9,46 +9,46 @@ from tqdm import tqdm
 from model.data import Loop
 from model.method import (
     SMAA,
-    ExploreThenCommit,
-    SelfishRobustMMAB,
-    SMAARelaxed,
     TotalReward,
+    Ours,
 )
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-N", type=int, default=8)
+    parser.add_argument("-N", type=int, default=4)
     parser.add_argument("-K", type=int, default=5)
     parser.add_argument("-T", type=int, default=500000)
     parser.add_argument(
         "--dis", type=str, choices=["bernoulli", "beta"], default="beta"
     )
     parser.add_argument(
-        "--cate", type=str, choices=["normal", "same"], default="normal"
+        "--cate", type=str, choices=["normal", "same", "smaa"], default="normal"
     )
 
     parser.add_argument(
         "--method",
         choices=[
             "SMAA",
-            "ExploreThenCommit",
-            "SelfishRobustMMAB",
             "TotalReward",
-            "SMAARelaxed",
+            "Ours",
         ],
-        default="SMAA",
+        default="Ours",
     )
 
-    # ExploreThenCommit / TotalReward
+    # TotalReward
     parser.add_argument("--alpha", type=int, default=500)
 
-    # SMAA / SMAARelaxed
+    # SMAA
     parser.add_argument("--beta", type=float, default=0.1)
     parser.add_argument("--tolerance", type=float, default=1e-6)
 
-    # SMAARelaxed
-    parser.add_argument("--eta", type=int, default=0.02)
+    # Ours
+    parser.add_argument("--c1", type=float, default=1e-3)
+    parser.add_argument("--c2", type=float, default=100)
+    parser.add_argument("--c3", type=float, default=1)
+    parser.add_argument("--eta", type=float, default=1.5)
+    parser.add_argument("--epsilon", type=float, default=1e-4)
 
     parser.add_argument("--nni", action="store_true")
 
@@ -67,21 +67,25 @@ def main():
 
     print(args)
 
-    N, K, T, dis, method, cate = args.N, args.K, args.T, args.dis, args.method, args.cate
-    if method == "ExploreThenCommit":
-        method_name = "{}_alpha_{}".format(method, args.alpha)
-    elif method == "TotalReward":
+    N, K, T, dis, method, cate = (
+        args.N,
+        args.K,
+        args.T,
+        args.dis,
+        args.method,
+        args.cate,
+    )
+    if method == "TotalReward":
         method_name = "{}_alpha_{}".format(method, args.alpha)
     elif method == "SMAA":
         method_name = "{}_beta_{}_tolerance_{}".format(
             method, args.beta, args.tolerance
         )
-    elif method == "SMAARelaxed":
-        method_name = "{}_eta_{}_beta_{}_tolerance_{}".format(
-            method, args.eta, args.beta, args.tolerance
+    elif method == "Ours":
+        method_name = "{}_c1_{}_c2_{}_c3_{}_eta_{}_epsilon_{}".format(
+            method, args.c1, args.c2, args.c3, args.eta, args.epsilon
         )
-    elif method == "SelfishRobustMMAB":
-        method_name = "{}_beta_{}".format(method, args.beta)
+
     res_path_base = os.path.join(
         "results",
         "N_{}_K_{}_T_{}_dis_{}_cate_{}".format(N, K, T, dis, cate),
@@ -90,24 +94,22 @@ def main():
     if not os.path.exists(res_path_base):
         os.makedirs(res_path_base)
 
-    total_runs = 50
+    total_runs = 100
     pne_nums = []
     regrets_sum = []
     for seed_data in range(total_runs):
         print("Running {}/{}".format(seed_data + 1, total_runs))
 
         res_file = os.path.join(res_path_base, "{}.pkl".format(seed_data))
-        if not os.path.exists(res_file):
+        count_tmp = np.zeros(8)
+
+        if not os.path.exists(res_file) or args.method == "Ours":
             loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data)
             print(loop.mu)
             print(loop.delta)
             players = []
             for i in range(args.N):
-                if method == "ExploreThenCommit":
-                    player = ExploreThenCommit(
-                        N, K, T, i, loop, alpha=args.alpha, seed=i
-                    )
-                elif method == "TotalReward":
+                if method == "TotalReward":
                     player = TotalReward(N, K, T, i, loop, alpha=args.alpha, seed=i)
                 elif method == "SMAA":
                     player = SMAA(
@@ -120,18 +122,21 @@ def main():
                         tolerance=args.tolerance,
                         seed=i,
                     )
-                elif method == "SMAARelaxed":
-                    player = SMAARelaxed(
+                elif method == "Ours":
+                    player = Ours(
+                        N,
                         K,
                         T,
+                        i,
                         loop,
-                        tolerance=args.tolerance,
+                        c1=args.c1,
+                        c2=args.c2,
+                        c3=args.c3,
                         eta=args.eta,
-                        beta=args.beta,
+                        epsilon=args.epsilon,
                         seed=i,
                     )
-                elif method == "SelfishRobustMMAB":
-                    player = SelfishRobustMMAB(N, K, T, i, loop, beta=args.beta, seed=i)
+
                 players.append(player)
 
             res_arm_rewards = []
@@ -143,7 +148,19 @@ def main():
                 choices = []
                 for i in range(N):
                     choices.append(players[i].pull(t))
+
                 arm_rewards, personal_rewards, is_pne, regrets = loop.pull(choices, t)
+                # if args.method == "Ours":
+                #     choices_new = []
+                #     for i in range(N):
+                #         choices_new.append(np.argmax(players[0].count_best))
+                #     _, _, is_pne_new, regrets_new = loop.pull(choices_new, t)
+                #     tmp = choices[0] * 4 + choices[1] * 2 + choices[2]
+                #     if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
+                #         count_tmp[tmp] += 1
+                #         print(choices, is_pne, count_tmp / np.sum(count_tmp), loop.mu)
+                    # print(choices, regrets, is_pne, choices_new, is_pne_new, regrets_new, loop.mu)
+
                 res_arm_rewards.append(arm_rewards.reshape(1, -1))
                 res_personal_rewards.append(personal_rewards.reshape(1, -1))
                 res_is_pne.append(is_pne)
@@ -188,6 +205,9 @@ def main():
         pne_nums.append(res["is_pne"][-1])
         regrets_sum.append(np.mean(res["regrets"][-1]))
         del res
+
+        # if args.method == "Ours":
+        #     break
 
     report = {"default": np.mean(pne_nums), "regret": np.mean(regrets_sum)}
     print(report)

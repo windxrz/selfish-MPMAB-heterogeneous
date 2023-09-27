@@ -1,0 +1,47 @@
+search_space:
+  N:
+    _type: choice
+    _value: [ 4, 7 ]
+  
+  dis:
+    _type: choice
+    _value: [ "beta", "bernoulli" ]
+
+  cate:
+    _type: choice
+    _value: [ "same", "normal" ]
+  
+  c1:
+    _type: choice
+    _value: [ 0.0001, 0.001, 0.01 ]
+
+  c2:
+    _type: choice
+    _value: [ 10, 100, 1000 ]
+
+  c3:
+    _type: choice
+    _value: [ 0.1, 1, 10 ]
+
+  eta:
+    _type: choice
+    _value: [ 0.2, 0.5, 0.8 ]
+
+  epsilon:
+    _type: choice
+    _value: [ 0.0001, 0.001, 0.01 ]
+
+
+trial_command: python main.py --nni --method SMAA -T 500000 -K 5
+trial_code_directory: ..
+
+trial_concurrency: 32
+max_trial_number: 1944
+
+tuner:
+  name: TPE
+  class_args:
+    optimize_mode: maximize
+
+training_service:
+  platform: local

@@ -56,6 +56,8 @@ class Loop:
                 elif cate == "same":
                     self.weights = np.random.rand(self.N)
                     self.weights = np.tile(self.weights, [self.K, 1]).T
+                elif cate == "smaa":
+                    self.weights = np.ones((self.N, self.K))
 
                 print(self.weights)
 
@@ -109,5 +111,5 @@ class Loop:
         regrets = np.maximum(0, reward_best_deviation - personal_expected_rewards)
 
         regrets = np.array(regrets)
-        is_pne = np.sum(regrets) <= 1e-6
+        is_pne = (np.sum(regrets) <= 1e-6) and (np.sum(personal_expected_rewards) >= self.welfare - 1e-6)
         return arm_rewards, personal_rewards, is_pne, regrets
