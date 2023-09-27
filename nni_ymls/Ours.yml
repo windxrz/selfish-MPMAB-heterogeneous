@@ -32,7 +32,7 @@ search_space:
     _value: [ 0.0001, 0.001, 0.01 ]
 
 
-trial_command: python main.py --nni --method SMAA -T 500000 -K 5
+trial_command: python main.py --nni --method Ours -T 500000 -K 5
 trial_code_directory: ..
 
 trial_concurrency: 32

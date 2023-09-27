@@ -214,7 +214,7 @@ class Ours:
             k = t % self.K
         else:
             if t == self.c1 * self.K:
-                self.mu_hat = self.rewards / self.count
+                self.mu_hat = self.rewards / (self.count + 1e-6)
                 self.phase = "exploiting"
                 print(self.loop.mu, self.mu_hat)
             if self.remaining == 0:
@@ -233,7 +233,7 @@ class Ours:
                     self.utitlity = (
                         self.mu_hat[k]
                         * self.last_personal_reward
-                        / self.last_arm_reward
+                        / (self.last_arm_reward + 1e-6)
                         + self.gammas[k]
                     )
             else:
@@ -262,7 +262,9 @@ class Ours:
         self.last_personal_reward, self.last_arm_reward = personal_reward, arm_reward
 
         if self.phase == "learning":
-            utility = personal_reward / arm_reward * self.mu_hat[k] + self.gammas[k]
+            utility = (
+                personal_reward / (arm_reward + 1e-6) * self.mu_hat[k] + self.gammas[k]
+            )
             p = self.next_prob()
             if self.mood == "discontent":
                 if p <= np.power(self.epsilon, self.F(utility)):
