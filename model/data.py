@@ -1,6 +1,8 @@
 import random
 
 import numpy as np
+import pickle as pkl
+import os
 
 from utils.delta import calculate_delta
 
@@ -18,29 +20,64 @@ class Loop:
         self.T = T
         self.dis = dis
 
-        while True:
+        if not os.path.exists("data"):
+            os.mkdir("data")
+        filename = "data/N_{}_K_{}_dis_{}_cate_{}_seed_{}.pkl".format(N, K, dis, cate, seed)
+        if os.path.exists(filename):
+            with open(filename, "rb") as f:
+                dic = pkl.load(f)
+                f.close()
+
+            self.weights = dic["weights"]
+            self.mu = dic["mu"]
+            self.delta = dic["delta"]
             if self.dis == "beta":
-                self.alpha = np.random.rand(K) * 5
-                self.beta = np.random.rand(K) * 5
-                self.rewards = np.random.beta(self.alpha, self.beta, (T, K))
-                self.mu = self.alpha / (self.alpha + self.beta)
-            elif self.dis == "bernoulli":
-                self.mu = np.random.rand(K)
-                self.rewards = np.random.binomial(1, self.mu, (T, K))
+                self.alpha = dic["alpha"]
+                self.beta = dic["beta"]
+            if "welfare" in dic:
+                self.welfare = dic["welfare"]
+            else:
+                delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(self.weights, self.mu)
+                dic["welfare"] = self.welfare
+                with open(filename, "wb") as f:
+                    pkl.dump(dic, f)
 
-            if cate == "normal":
-                self.weights = np.random.rand(self.N, self.K)
-            elif cate == "same":
-                self.weights = np.random.rand(self.N)
-                self.weights = np.tile(self.weights, [self.K, 1]).T
-            
-            print(self.weights)
+        else:
+            while True:
+                if self.dis == "beta":
+                    self.alpha = np.random.rand(K) * 5
+                    self.beta = np.random.rand(K) * 5
+                    self.mu = self.alpha / (self.alpha + self.beta)
+                elif self.dis == "bernoulli":
+                    self.mu = np.random.rand(K)
 
-            # delta_pne, delta_nopne, self.delta = calculate_delta(self.weights, self.mu)
-            delta_pne, delta_nopne, self.delta = 1, 1, 1
-            print("delta:", delta_pne, delta_nopne, self.delta)
-            if delta_pne < 500:
-                break
+                if cate == "normal":
+                    self.weights = np.random.rand(self.N, self.K)
+                elif cate == "same":
+                    self.weights = np.random.rand(self.N)
+                    self.weights = np.tile(self.weights, [self.K, 1]).T
+
+                print(self.weights)
+
+                delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(self.weights, self.mu)
+                print("delta:", delta_pne, delta_nopne, self.delta)
+                if delta_pne < 500 and ((self.N <= 5 and self.delta > 0.01) or (self.N > 5 and self.delta > 3e-4)):
+                    break
+            dic = {}
+            dic["weights"] = self.weights
+            dic["mu"] = self.mu
+            dic["delta"] = self.delta
+            dic["welfare"] = self.welfare
+            if self.dis == "beta":
+                dic["alpha"] = self.alpha
+                dic["beta"] = self.beta
+            with open(filename, "wb") as f:
+                pkl.dump(dic, f)
+
+        if self.dis == "beta":
+            self.rewards = np.random.beta(self.alpha, self.beta, (T, K))
+        elif self.dis == "bernoulli":
+            self.rewards = np.random.binomial(1, self.mu, (T, K))
 
     def pull(self, choices, t):
         weight = np.zeros(self.K)
@@ -48,7 +85,7 @@ class Loop:
         for i, choice in enumerate(choices):
             weight[choice] += self.weights[i][choice]
             weight_choices.append(self.weights[i][choice])
-        
+
         weight_choices = np.array(weight_choices)
         arm_rewards = self.rewards[t][choices]
         personal_rewards = (self.rewards[t] / (weight + 1e-6))[choices]
@@ -60,13 +97,17 @@ class Loop:
         weight = np.tile(weight, self.N).reshape(self.N, -1)
         for i, choice in enumerate(choices):
             weight[i][choice] -= self.weights[i][choice]
-        
+
         weight_choices = np.tile(weight_choices.reshape(self.N, 1), [1, self.K])
         weight = weight + weight_choices
-        reward_deviation = np.tile(self.mu.reshape(-1, self.K), [self.N, 1]) / (weight + 1e-6) * weight_choices
+        reward_deviation = (
+            np.tile(self.mu.reshape(-1, self.K), [self.N, 1])
+            / (weight + 1e-6)
+            * weight_choices
+        )
         reward_best_deviation = np.max(reward_deviation, axis=1)
         regrets = np.maximum(0, reward_best_deviation - personal_expected_rewards)
 
         regrets = np.array(regrets)
-        is_pne = (np.sum(regrets) <= 1e-6)
+        is_pne = np.sum(regrets) <= 1e-6
         return arm_rewards, personal_rewards, is_pne, regrets

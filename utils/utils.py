@@ -155,7 +155,8 @@ def main():
     while True:
         K = np.random.randint(2, 20)
         N = np.random.randint(K // 2, K * 3)
-        mu = np.random.uniform(0, 1, K)
+        # mu = np.random.uniform(0, 1, K)
+        mu = np.ones(K)
         weights = np.random.uniform(1e-3, 1, (N, K))
         # weights = np.sort(weights, axis=1)
         # print(weights)

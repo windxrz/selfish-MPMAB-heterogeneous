@@ -2,6 +2,7 @@ import random
 from itertools import product
 
 import numpy as np
+from tqdm import tqdm
 
 
 def calculate_payoff(weights, rewards, strategy):
@@ -35,36 +36,24 @@ def calculate_payoff(weights, rewards, strategy):
     return payoffs
 
 
-def find_pne(weights, rewards, isprint=False):
-    """
-    Find the most efficient Pure Nash Equilibrium.
-
-    Parameters:
-    weights (list): List of weights for each agent.
-    rewards (list): List of rewards for each arm.
-
-    Returns:
-    tuple: Most efficient PNE and its total payoff.
-    """
+def find_pne_1(weights, rewards, isprint=False):
     N, K = weights.shape
 
     # Generate all possible strategy profiles
     all_strategies = list(product(range(K), repeat=N))
 
     best_pne = None
-    best_total_payoff = 0
-
     best_delta_1 = 1000
 
-    no_pne = []
+    best_nopne = None
+    best_delta_2 = 1000
 
     multiple_pne = False
     first_payoff = -1
 
     # Iterate through all strategy profiles to find PNE
-    for strategy in all_strategies:
+    for strategy in tqdm(all_strategies):
         is_pne = True
-        total_payoff = 0
         current_payoffs = calculate_payoff(weights, rewards, strategy)
 
         delta_2 = 0
@@ -86,6 +75,8 @@ def find_pne(weights, rewards, isprint=False):
                 if new_payoffs[i] > current_payoffs[i]:
                     is_pne = False
                     delta_2 = max(delta_2, new_payoffs[i] - current_payoffs[i])
+                    if delta_2 > best_delta_2:
+                        break
 
                 if new_payoffs[i] <= current_payoffs[i] and is_pne:
                     delta_1 = min(delta_1, current_payoffs[i] - new_payoffs[i])
@@ -100,54 +91,124 @@ def find_pne(weights, rewards, isprint=False):
             if isprint:
                 print("PNE", strategy, total_payoff, delta_1)
             if delta_1 <= best_delta_1:
-                # if total_payoff >= best_total_payoff and delta_1 <= best_delta_1:
-                best_total_payoff = total_payoff
                 best_pne = strategy
                 best_delta_1 = delta_1
-            if total_payoff >= best_total_payoff:
-                best_total_payoff = total_payoff
         else:
-            no_pne.append((sum(current_payoffs), delta_2))
             if isprint:
                 print("No PNE", strategy, sum(current_payoffs), delta_2)
+            if delta_2 <= best_delta_2:
+                best_nopne = strategy
+                best_delta_2 = delta_2
 
-    return best_pne, best_total_payoff, best_delta_1, no_pne, multiple_pne
+    return best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne
 
+
+def find_pne_2(weights, rewards, isprint=False):
+    N, K = weights.shape
+
+    # Generate all possible strategy profiles
+    all_strategies = list(product(range(K), repeat=N))
+
+    best_pne = None
+    best_delta_1 = 1000
+
+    best_nopne = None
+    best_delta_2 = 1000
+
+    multiple_pne = False
+    first_payoff = -1
+    best_payoff = 0
+
+    for strategy in tqdm(all_strategies):
+        strategy = list(strategy)
+        weight = np.zeros(K)
+        weight_choices = []
+        for i, choice in enumerate(strategy):
+            weight[choice] += weights[i][choice]
+            weight_choices.append(weights[i][choice])
+
+        weight_choices = np.array(weight_choices)
+
+        personal_expected_rewards = (rewards / (weight + 1e-6))[strategy]
+        personal_expected_rewards = personal_expected_rewards * weight_choices
+
+        weight = np.tile(weight, N).reshape(N, -1)
+        for i, choice in enumerate(strategy):
+            weight[i][choice] -= weights[i][choice]
+
+        weight_choices = np.tile(weight_choices.reshape(N, 1), [1, K])
+        weight = weight + weight_choices
+        reward_deviation = (
+            np.tile(rewards.reshape(-1, K), [N, 1])
+            / (weight + 1e-6)
+            * weight_choices
+        )
+
+        for i, choice in enumerate(strategy):
+            reward_deviation[i][choice] = -1e6
+
+        reward_best_deviation = np.max(reward_deviation, axis=1)
+        delta_rewards = reward_best_deviation - personal_expected_rewards
+        if np.max(delta_rewards) <= 1e-6:
+            is_pne = True
+            delta_1 = -np.max(delta_rewards)
+        else:
+            is_pne = False
+            delta_2 = np.max(delta_rewards)
+
+        # Update the best PNE if necessary
+        if is_pne:
+            total_payoff = np.sum(personal_expected_rewards)
+            if total_payoff > best_payoff:
+                best_payoff = total_payoff
+            if first_payoff == -1:
+                first_payoff = total_payoff
+            elif abs(total_payoff - first_payoff) > 1e-5:
+                multiple_pne = True
+            if isprint:
+                print("PNE", strategy, total_payoff, delta_1)
+            if delta_1 <= best_delta_1:
+                best_pne = strategy
+                best_delta_1 = delta_1
+        else:
+            if isprint:
+                print("No PNE", strategy, np.sum(personal_expected_rewards), delta_2)
+            if delta_2 <= best_delta_2:
+                best_nopne = strategy
+                best_delta_2 = delta_2
+
+    return best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne, best_payoff
 
 def calculate_delta(weights, rewards, isprint=False):
-    best_pne, best_total_payoff, best_delta_pne, no_pne, multiple_pne = find_pne(
+    best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne, best_payoff = find_pne_2(
         weights, rewards, isprint
     )
-
-    l = [ele[1] for ele in no_pne if ele[0] >= best_total_payoff - 1e-5]
-    delta_nopne = min(l) if len(l) > 0 else 100
-
     if isprint:
-        print(best_pne, best_total_payoff, best_delta_pne, delta_nopne)
-    return best_delta_pne, delta_nopne, min(best_delta_pne, delta_nopne)
+        print(best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne, best_payoff)
+
+    delta = min(best_delta_1, best_delta_2)
+    return best_delta_1, best_delta_2, delta, best_payoff
 
 
 if __name__ == "__main__":
-    # Generate random weights and rewards for 3 agents and 3 arms
-    # random.seed(42)  # For reproducibility
-    N = 3  # Number of agents
-    K = 2  # Number of arms
+    N, K = 3, 2
 
+    isprint = True
     # PNE > NOPNE
-    weights = np.tile([[1.0, 0.8, 0.4]], [K, 1]).reshape(N, K)
+    weights = np.tile([[1.0], [0.8], [0.4]], [1, K])
     rewards = np.array([1.0, 0.7])
-    print(weights, rewards)
-    print(calculate_delta(weights, rewards))
+    print(calculate_delta(weights, rewards, isprint=isprint))
 
     # NOPNE > PNE
-    weights = np.tile([[0.9, 0.6, 0.4]], [K, 1]).reshape(N, K)
+    weights = np.tile([[0.9], [0.6], [0.4]], [1, K])
     rewards = np.array([1, 0.6])
-    print(calculate_delta(weights, rewards))
+    print(calculate_delta(weights, rewards, isprint=isprint))
 
-    # Multiple PNE: there exist more insufficient PNE
-    # weights = [0.8, 0.3, 0.2]
-    # rewards = [0.6, 0.4, 0.2]
-
+    # Multiple PNE: there exist insufficient PNE
+    N, K = 3, 3
+    weights = np.tile([[0.8], [0.3], [0.2]], [1, K])
+    rewards = np.array([0.6, 0.4, 0.2])
+    print(calculate_delta(weights, rewards, isprint=isprint))
 
     # while True:
     #     # weights = [round(random.uniform(0.1, 1), 1) for _ in range(N)]
