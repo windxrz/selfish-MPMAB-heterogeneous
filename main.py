@@ -94,7 +94,7 @@ def main():
     if not os.path.exists(res_path_base):
         os.makedirs(res_path_base)
 
-    total_runs = 100
+    total_runs = 20
     pne_nums = []
     regrets_sum = []
     for seed_data in range(total_runs):

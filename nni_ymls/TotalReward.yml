@@ -5,7 +5,7 @@ search_space:
   
   dis:
     _type: choice
-    _value: [ "beta", "bernoulli" ]
+    _value: [ "beta" ]
 
   cate:
     _type: choice
@@ -16,11 +16,11 @@ search_space:
     _value: [ 100, 200, 500, 1000, 2000 ]
 
 
-trial_command: python main.py --nni --method TotalReward -T 500000 -K 5
+trial_command: python main.py --nni --method TotalReward -T 5000000 -K 5
 trial_code_directory: ..
 
-trial_concurrency: 20
-max_trial_number: 40
+trial_concurrency: 4
+max_trial_number: 20
 
 tuner:
   name: TPE

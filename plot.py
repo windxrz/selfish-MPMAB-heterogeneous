@@ -14,7 +14,7 @@ rc("text", usetex=True)
 matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
-COUNT = 100
+COUNT = 10
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -39,30 +39,21 @@ COLOR_LIST = [
     "#22AB16",
 ]
 
-COLOR_DARK = {
-    "SelfishRobustMMAB": "#DBAF63",
-    "TotalReward": "#543466",
-    "ExploreThenCommit": "#22613D",
-    "SMAA": "#B03E3A",
-}
+
 COLOR = {
-    "SelfishRobustMMAB": "#FB9649",
+    "SMAA": "#FB9649",
     "TotalReward": "#605CB8",
     "ExploreThenCommit": "#53C292",
     # "ExploreThenCommitPlus": "#FFE680",
-    "SMAA": "#E64640",
+    "Ours": "#E64640",
 }
 MARKER = {
-    "SelfishRobustMMAB": "^",
+    "SMAA": "^",
     "TotalReward": "p",
     "ExploreThenCommit": "s",
     # "ExploreThenCommitPlus": "P",
-    "SMAA": "o",
+    "Ours": "o",
 }
-
-# COLOR_RELAXED = [, "#F52E00", "#FF6003", "#FE7701"]
-COLOR_RELAXED = ["#4A0F0F", "#870300", "#D61010", "#E3784D", "#F6BDC0"]
-MARKER_RELAXED = ["^", "p", "s", "o"]
 
 
 def setting_path(N, K, T, dis, cate):
@@ -123,7 +114,7 @@ def analyze_method(setting, method):
         if method + "_" not in run:
             continue
         count, res = analyze_method_run(setting, run)
-        if count < 2:
+        if count < COUNT:
             continue
         # if res["is_pne"][-1] > is_pne_max:
         #     is_pne_max = res["is_pne"][-1]
@@ -136,7 +127,7 @@ def analyze_method(setting, method):
     return final
 
 
-def plot_part(N, K, T, dis, cate, ax1):
+def plot_part(N, K, T, dis, cate, ax1, ax2):
     setting_name = setting_path(N, K, T, dis, cate)
 
     step = 100
@@ -168,14 +159,32 @@ def plot_part(N, K, T, dis, cate, ax1):
             markeredgewidth=MARKEREDGEWIDTH,
         )
 
+        ax2.plot(
+            range(1, T + 1, step),
+            (np.arange(1, T + 1, step) - res["is_pne"]),  # / np.arange(1, T + 1, step),
+            label=label_name,
+            color=COLOR[method_name],
+            linewidth=LINEWIDTH,
+            marker=MARKER[method_name],
+            markevery=T // (5 * step) - 1,
+            markersize=MARKERSIZE,
+            markerfacecolor="None",
+            markeredgewidth=MARKEREDGEWIDTH,
+        )
+
         ax1.ticklabel_format(style="sci", scilimits=(-3, 4), axis="both")
+        ax2.ticklabel_format(style="sci", scilimits=(-3, 4), axis="both")
 
         ax1.set_xticks(np.arange(0, T + 1, T // 5))
+        ax2.set_xticks(np.arange(0, T + 1, T // 5))
         ax1.tick_params(axis="both", which="major", labelsize=TICKFONTSIZE)
+        ax2.tick_params(axis="both", which="major", labelsize=TICKFONTSIZE)
 
         ax1.set_title(
-            "$N={}$, {} distribution".format(N, dis.capitalize()), size=FONTSIZE, pad=15
+            "$N={}$, {}".format(N, cate), size=FONTSIZE, pad=15
         )
+        ax2.set_xlabel("Round", size=FONTSIZE)
+
 
 
 def plot_all():
@@ -183,14 +192,13 @@ def plot_all():
     fig, axes = plt.subplots(2, 4, figsize=(17, 6.5))
 
     cates = ["normal", "same"]
-    for i, cate in enumerate(cates):
-        plot_part(4, 5, 500000, "beta", cate, axes[i][0])
-        plot_part(4, 5, 500000, "bernoulli", cate, axes[i][1])
-        plot_part(7, 5, 500000, "beta", cate, axes[i][2])
-        plot_part(7, 5, 500000, "bernoulli", cate, axes[i][3])
+    plot_part(4, 5, 500000, "beta", "normal", axes[0][0], axes[1][0])
+    plot_part(4, 5, 500000, "beta", "same", axes[0][1], axes[1][1])
+    plot_part(7, 5, 500000, "beta", "normal", axes[0][2], axes[1][2])
+    plot_part(7, 5, 500000, "beta", "same", axes[0][3], axes[1][3])
 
-    axes[0][0].set_ylabel("Normal", size=FONTSIZE)
-    axes[1][0].set_ylabel("Same", size=FONTSIZE)
+    axes[0][0].set_ylabel("Regrets", size=FONTSIZE)
+    axes[1][0].set_ylabel("\# of Non-equilibrium rounds", size=FONTSIZE)
 
     lines, labels = axes[0, 1].get_legend_handles_labels()
     fig.legend(

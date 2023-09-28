@@ -5,7 +5,7 @@ search_space:
   
   dis:
     _type: choice
-    _value: [ "beta", "bernoulli" ]
+    _value: [ "beta" ]
 
   cate:
     _type: choice
@@ -17,7 +17,7 @@ search_space:
 
   c2:
     _type: choice
-    _value: [ 10, 100, 1000 ]
+    _value: [ 5, 10, 40 ]
 
   c3:
     _type: choice
@@ -29,14 +29,14 @@ search_space:
 
   epsilon:
     _type: choice
-    _value: [ 0.0001, 0.001, 0.01 ]
+    _value: [ 0.1, 0.2, 0.3 ]
 
 
-trial_command: python main.py --nni --method Ours -T 500000 -K 5
+trial_command: python main.py --nni --method Ours -T 5000000 -K 5
 trial_code_directory: ..
 
-trial_concurrency: 32
-max_trial_number: 1944
+trial_concurrency: 72
+max_trial_number: 972
 
 tuner:
   name: TPE
