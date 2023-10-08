@@ -18,12 +18,12 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-N", type=int, default=4)
     parser.add_argument("-K", type=int, default=5)
-    parser.add_argument("-T", type=int, default=500000)
+    parser.add_argument("-T", type=int, default=5000000)
     parser.add_argument(
         "--dis", type=str, choices=["bernoulli", "beta"], default="beta"
     )
     parser.add_argument(
-        "--cate", type=str, choices=["normal", "same", "smaa"], default="normal"
+        "--cate", type=str, choices=["normal", "same", "smaa"], default="smaa"
     )
 
     parser.add_argument(
@@ -44,11 +44,11 @@ def parse_args():
     parser.add_argument("--tolerance", type=float, default=1e-6)
 
     # Ours
-    parser.add_argument("--c1", type=float, default=1e-3)
-    parser.add_argument("--c2", type=float, default=100)
-    parser.add_argument("--c3", type=float, default=1)
-    parser.add_argument("--eta", type=float, default=1.5)
-    parser.add_argument("--epsilon", type=float, default=1e-4)
+    parser.add_argument("--c1", type=float, default=0.01)
+    parser.add_argument("--c2", type=float, default=1000)
+    parser.add_argument("--c3", type=float, default=100)
+    parser.add_argument("--eta", type=float, default=0)
+    parser.add_argument("--epsilon", type=float, default=1e-3)
 
     parser.add_argument("--nni", action="store_true")
 
@@ -150,16 +150,6 @@ def main():
                     choices.append(players[i].pull(t))
 
                 arm_rewards, personal_rewards, is_pne, regrets = loop.pull(choices, t)
-                # if args.method == "Ours":
-                #     choices_new = []
-                #     for i in range(N):
-                #         choices_new.append(np.argmax(players[0].count_best))
-                #     _, _, is_pne_new, regrets_new = loop.pull(choices_new, t)
-                #     tmp = choices[0] * 4 + choices[1] * 2 + choices[2]
-                #     if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
-                #         count_tmp[tmp] += 1
-                #         print(choices, is_pne, count_tmp / np.sum(count_tmp), loop.mu)
-                    # print(choices, regrets, is_pne, choices_new, is_pne_new, regrets_new, loop.mu)
 
                 res_arm_rewards.append(arm_rewards.reshape(1, -1))
                 res_personal_rewards.append(personal_rewards.reshape(1, -1))
@@ -167,6 +157,17 @@ def main():
                 res_regrets.append(regrets.reshape(1, -1))
                 for i in range(N):
                     players[i].update(arm_rewards[i], personal_rewards[i], choices)
+
+                # if args.method == "Ours":
+                #     choices_new = []
+                #     for i in range(N):
+                #         choices_new.append(np.argmax(players[0].count_best))
+                #     _, _, is_pne_new, regrets_new = loop.pull(choices_new, t)
+                #     # tmp = choices[0] * 4 + choices[1] * 2 + choices[2]
+                #     # if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
+                #     #     count_tmp[tmp] += 1
+                #     print([(player.mood, player.action, round(player.utility, 2), round(player.last_utility, 2)) for player in players], choices, is_pne, loop.mu.round(2))
+
 
             res_arm_rewards = np.concatenate(res_arm_rewards, axis=0)
 

@@ -174,18 +174,24 @@ class Ours:
         self.pull_list = []
         self.loop = loop
 
-        self.c1 = np.ceil(c1 * np.log(T) * K * K / loop.delta / loop.delta)
+        if loop.delta > 1e-6:
+            self.c1 = np.ceil(c1 * np.log(T) * K * K / loop.delta / loop.delta)
+            self.gamma = loop.delta / 4 / self.N
+            self.gammas = np.random.normal(0, self.gamma, K)
+        else:
+            self.c1 = np.ceil(c1 * np.log(T) * K * K)
+            self.gamma = 0
+            self.gammas = np.zeros(K)
         print("Exploring phase:", self.c1)
         self.c2 = c2
         self.c3 = c3
         self.eta = eta
-        self.gamma = loop.delta / 4 / self.N
-        self.gammas = np.random.normal(0, self.gamma, K)
         self.epsilon = epsilon
 
         self.mood = "discontent"
         self.action = 0
         self.utility = 0
+        self.last_utility = 0
 
         self.rewards = np.zeros(self.K)
         self.count = np.zeros(self.K)
@@ -196,6 +202,8 @@ class Ours:
 
         self.count_best = np.zeros(self.K)
 
+        self.threshold = 1e-4
+    
         self.probabilities = np.random.rand(self.T * 10)
         self.prob_idx = 0
 
@@ -222,6 +230,7 @@ class Ours:
                     self.round += 1
                     self.phase = "learning"
                     self.remaining = np.ceil(self.c2 * np.power(self.round, self.eta))
+                    self.mu_hat = self.rewards / (self.count + 1e-6)
                 else:
                     self.phase = "exploiting"
                     self.remaining = np.ceil(self.c3 * np.power(2, self.round))
@@ -265,6 +274,7 @@ class Ours:
             utility = (
                 personal_reward / (arm_reward + 1e-6) * self.mu_hat[k] + self.gammas[k]
             )
+            self.last_utility = utility
             p = self.next_prob()
             if self.mood == "discontent":
                 if p <= np.power(self.epsilon, self.F(utility)):
@@ -273,32 +283,32 @@ class Ours:
                     self.utility = utility
             elif self.mood == "content":
                 if k == self.action:
-                    if utility > self.utility - 1e-6:
+                    if utility > self.utility + self.threshold:
                         self.mood = "hopeful"
-                    elif np.abs(utility - self.utility) < 1e-6:
+                    elif np.abs(utility - self.utility) < self.threshold:
                         self.mood = "content"
                     else:
                         self.mood = "watchful"
                 else:
                     p = self.next_prob()
-                    if utility >= self.utility - 1e-6 and p <= np.power(
+                    if utility >= self.utility + self.threshold and p <= np.power(
                         self.epsilon, self.G(utility - self.utility)
                     ):
                         self.mood = "content"
                         self.action = k
                         self.utlity = utility
             elif self.mood == "watchful":
-                if utility > self.utility - 1e-6:
+                if utility > self.utility + self.threshold:
                     self.mood = "hopeful"
-                elif np.abs(utility - self.utility) < 1e-6:
+                elif np.abs(utility - self.utility) < self.threshold:
                     self.mood = "content"
                 else:
                     self.mood = "discontent"
             elif self.mood == "hopeful":
-                if utility > self.utility - 1e-6:
+                if utility > self.utility + self.threshold:
                     self.mood = "content"
                     self.utility = utility
-                elif np.abs(utility - self.utility) < 1e-6:
+                elif np.abs(utility - self.utility) < self.threshold:
                     self.mood = "content"
                 else:
                     self.mood = "watchful"

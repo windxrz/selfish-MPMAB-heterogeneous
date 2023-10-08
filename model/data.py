@@ -56,6 +56,13 @@ class Loop:
                 elif cate == "same":
                     self.weights = np.random.rand(self.N)
                     self.weights = np.tile(self.weights, [self.K, 1]).T
+                elif cate == "rewardsame":
+                    self.weights = np.random.rand(self.N, self.K)
+                    self.alpha = np.tile(np.random.rand() * 5, K)
+                    self.beta = np.tile(np.random.rand() * 5, K)
+                    self.mu = self.alpha / (self.alpha + self.beta)
+                    print("mu", self.mu)
+                    print("weights", self.weights)
                 elif cate == "smaa":
                     self.weights = np.ones((self.N, self.K))
 
@@ -63,7 +70,7 @@ class Loop:
 
                 delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(self.weights, self.mu)
                 print("delta:", delta_pne, delta_nopne, self.delta)
-                if delta_pne < 500 and ((self.N <= 5 and self.delta > 0.01) or (self.N > 5 and self.delta > 3e-4)):
+                if delta_pne < 500 and ((self.N <= 5 and self.delta > 0.01) or (self.N > 5 and self.delta > 3e-4) or (self.N < self.K and cate == "rewardsame")):
                     break
             dic = {}
             dic["weights"] = self.weights

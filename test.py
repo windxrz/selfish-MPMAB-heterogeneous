@@ -4,8 +4,8 @@ def generate_data():
     Ns = [4, 7]
     K = 5
     T = 10000
-    dises = ["beta", "bernoulli"]
-    cates = ["normal", "same"]
+    dises = ["beta"]
+    cates = ["rewardsame"]
     for N in Ns:
         for dis in dises:
             for cate in cates:

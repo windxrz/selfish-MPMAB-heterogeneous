@@ -9,34 +9,34 @@ search_space:
 
   cate:
     _type: choice
-    _value: [ "same", "normal" ]
+    _value: [ "same", "normal", "rewardsame" ]
   
   c1:
     _type: choice
-    _value: [ 0.0001, 0.001, 0.01 ]
+    _value: [ 0.001, 0.005, 0.01 ]
 
   c2:
     _type: choice
-    _value: [ 5, 10, 40 ]
+    _value: [ 200, 1000, 5000 ]
 
   c3:
     _type: choice
-    _value: [ 0.1, 1, 10 ]
+    _value: [ 200, 1000, 5000 ]
 
   eta:
     _type: choice
-    _value: [ 0.2, 0.5, 0.8 ]
+    _value: [ 0.0, 1, 2 ]
 
   epsilon:
     _type: choice
-    _value: [ 0.1, 0.2, 0.3 ]
+    _value: [ 0.001, 0.01, 0.1 ]
 
 
 trial_command: python main.py --nni --method Ours -T 5000000 -K 5
 trial_code_directory: ..
 
 trial_concurrency: 72
-max_trial_number: 972
+max_trial_number: 1458
 
 tuner:
   name: TPE
