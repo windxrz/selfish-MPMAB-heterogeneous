@@ -86,6 +86,22 @@ def dfs(i, res, N, K, mu, weights):
                 return True
     return False
 
+
+def count_PNE_ratio():
+    trial = 0
+    non_exist = 0
+    while True:
+        K = np.random.randint(10, 100)
+        N = np.random.randint(10, 100)
+        mu = np.random.uniform(0, 1, K)
+        weights = np.random.uniform(0, 1, (N, K))
+        trial += 1
+        if not best_best_response_dynamics(N, K, mu, weights):
+            non_exist += 1
+        if trial % 100 == 0:
+            print(non_exist, trial, non_exist / trial)
+
+
 def main():
     z = 0
     K = 5
@@ -140,32 +156,19 @@ def main():
     mu = np.array([0.84538588, 0.09, 0.41458564, 0.20688417])
     weights = np.array(
         [
-            [5.18598184, 0,          0,          0],
-            [0,          0,          1.3919881,  0],
-            [0,          0,          0,          0.97509145],
-            [0.85953784, 0,          0.80106269, 0],
-            [0,          0.01420995, 0,          0.54831471],
-            [0,          0,          0.58696091, 0.92798576],
-            [0,          0.45314008, 0.56469558, 0],
+            [5.18598184, 0, 0, 0],
+            [0, 0, 1.3919881, 0],
+            [0, 0, 0, 0.97509145],
+            [0.85953784, 0, 0.80106269, 0],
+            [0, 0.01420995, 0, 0.54831471],
+            [0, 0, 0.58696091, 0.92798576],
+            [0, 0.45314008, 0.56469558, 0],
         ]
     )
     res = [0] * N
-    dfs(0, res, N, K, mu, weights)
-    print(best_best_response_dynamics(N, K, mu, weights))
-    while True:
-        K = np.random.randint(2, 20)
-        N = np.random.randint(K // 2, K * 3)
-        # mu = np.random.uniform(0, 1, K)
-        mu = np.ones(K)
-        weights = np.random.uniform(1e-3, 1, (N, K))
-        # weights = np.sort(weights, axis=1)
-        # print(weights)
-        # break
-        if not best_best_response_dynamics(N, K, mu, weights):
-            break
-        z += 1
-        if z % 100 == 0:
-            print(z)
+    print(dfs(0, res, N, K, mu, weights))
+
+    count_PNE_ratio()
     # print(N, K, mu, weights)
 
 

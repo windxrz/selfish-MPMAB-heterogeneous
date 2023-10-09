@@ -2,14 +2,14 @@ from model.data import Loop
 
 def generate_data():
     Ns = [4, 7]
-    K = 5
+    K = 4
     T = 10000
     dises = ["beta"]
-    cates = ["rewardsame"]
+    cates = ["normal", "same"]
     for N in Ns:
         for dis in dises:
             for cate in cates:
-                for seed in range(100):
+                for seed in range(50):
                     loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed)
 
 if __name__ == "__main__":

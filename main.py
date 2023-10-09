@@ -49,6 +49,7 @@ def parse_args():
     parser.add_argument("--c3", type=float, default=100)
     parser.add_argument("--eta", type=float, default=0)
     parser.add_argument("--epsilon", type=float, default=1e-3)
+    parser.add_argument("--debug", action="store_true", default=False)
 
     parser.add_argument("--nni", action="store_true")
 
@@ -94,7 +95,7 @@ def main():
     if not os.path.exists(res_path_base):
         os.makedirs(res_path_base)
 
-    total_runs = 20
+    total_runs = 50
     pne_nums = []
     regrets_sum = []
     for seed_data in range(total_runs):
@@ -123,6 +124,7 @@ def main():
                         seed=i,
                     )
                 elif method == "Ours":
+                    print("debug: ", args.debug)
                     player = Ours(
                         N,
                         K,
@@ -135,6 +137,7 @@ def main():
                         eta=args.eta,
                         epsilon=args.epsilon,
                         seed=i,
+                        debug=args.debug,
                     )
 
                 players.append(player)
@@ -158,15 +161,15 @@ def main():
                 for i in range(N):
                     players[i].update(arm_rewards[i], personal_rewards[i], choices)
 
-                # if args.method == "Ours":
-                #     choices_new = []
-                #     for i in range(N):
-                #         choices_new.append(np.argmax(players[0].count_best))
-                #     _, _, is_pne_new, regrets_new = loop.pull(choices_new, t)
-                #     # tmp = choices[0] * 4 + choices[1] * 2 + choices[2]
-                #     # if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
-                #     #     count_tmp[tmp] += 1
-                #     print([(player.mood, player.action, round(player.utility, 2), round(player.last_utility, 2)) for player in players], choices, is_pne, loop.mu.round(2))
+                if args.method == "Ours" and args.debug:
+                    choices_new = []
+                    for i in range(N):
+                        choices_new.append(np.argmax(players[0].count_best))
+                    _, _, is_pne_new, regrets_new = loop.pull(choices_new, t)
+                    # tmp = choices[0] * 4 + choices[1] * 2 + choices[2]
+                    # if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
+                    #     count_tmp[tmp] += 1
+                    print([(player.mood, player.action, round(player.utility, 2), round(player.last_utility, 2)) for player in players], choices, is_pne, loop.mu.round(2))
 
 
             res_arm_rewards = np.concatenate(res_arm_rewards, axis=0)

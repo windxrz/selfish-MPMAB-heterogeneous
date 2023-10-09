@@ -163,7 +163,7 @@ class TotalReward:
 
 
 class Ours:
-    def __init__(self, N, K, T, rank, loop, c1, c2, c3, eta, epsilon, seed=0):
+    def __init__(self, N, K, T, rank, loop, c1, c2, c3, eta, epsilon, seed=0, debug=False):
         set_seed(seed)
         self.N = N
         self.K = K
@@ -207,6 +207,8 @@ class Ours:
         self.probabilities = np.random.rand(self.T * 10)
         self.prob_idx = 0
 
+        self.debug = debug
+
     def next_prob(self):
         self.prob_idx += 1
         return self.probabilities[self.prob_idx - 1]
@@ -224,6 +226,8 @@ class Ours:
             if t == self.c1 * self.K:
                 self.mu_hat = self.rewards / (self.count + 1e-6)
                 self.phase = "exploiting"
+                if self.debug:
+                    self.mu_hat = self.loop.mu
                 print(self.loop.mu, self.mu_hat)
             if self.remaining == 0:
                 if self.phase == "exploiting":
@@ -231,6 +235,8 @@ class Ours:
                     self.phase = "learning"
                     self.remaining = np.ceil(self.c2 * np.power(self.round, self.eta))
                     self.mu_hat = self.rewards / (self.count + 1e-6)
+                    if self.debug:
+                        self.mu_hat = self.loop.mu
                 else:
                     self.phase = "exploiting"
                     self.remaining = np.ceil(self.c3 * np.power(2, self.round))

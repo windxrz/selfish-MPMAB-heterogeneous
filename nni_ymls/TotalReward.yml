@@ -9,18 +9,18 @@ search_space:
 
   cate:
     _type: choice
-    _value: [ "same", "normal", "rewardsame" ]
+    _value: [ "same", "normal" ]
   
   alpha:
     _type: choice
     _value: [ 100, 200, 500, 1000, 2000 ]
 
 
-trial_command: python main.py --nni --method TotalReward -T 5000000 -K 5
+trial_command: python main.py --nni --method TotalReward -T 500000 -K 4
 trial_code_directory: ..
 
-trial_concurrency: 4
-max_trial_number: 30
+trial_concurrency: 10
+max_trial_number: 20
 
 tuner:
   name: TPE

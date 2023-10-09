@@ -14,7 +14,7 @@ rc("text", usetex=True)
 matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
-COUNT = 20
+COUNT = 10
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -192,11 +192,11 @@ def plot_all():
     fig, axes = plt.subplots(2, 4, figsize=(17, 6.5))
 
     dis = "beta"
-    T = 5000000
-    plot_part(4, 5, T, dis, "normal", axes[0][0], axes[1][0])
-    plot_part(4, 5, T, dis, "same", axes[0][1], axes[1][1])
-    plot_part(7, 5, T, dis, "normal", axes[0][2], axes[1][2])
-    plot_part(7, 5, T, dis, "same", axes[0][3], axes[1][3])
+    T = 500000
+    plot_part(4, 4, T, dis, "normal", axes[0][0], axes[1][0])
+    plot_part(4, 4, T, dis, "same", axes[0][1], axes[1][1])
+    plot_part(7, 4, T, dis, "normal", axes[0][2], axes[1][2])
+    plot_part(7, 4, T, dis, "same", axes[0][3], axes[1][3])
 
     axes[0][0].set_ylabel("Regrets", size=FONTSIZE)
     axes[1][0].set_ylabel("\# of Non-equilibrium rounds", size=FONTSIZE)
