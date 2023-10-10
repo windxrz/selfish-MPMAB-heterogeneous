@@ -14,7 +14,7 @@ rc("text", usetex=True)
 matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
-COUNT = 10
+COUNT = 50
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -114,14 +114,14 @@ def analyze_method(setting, method):
         if method + "_" not in run:
             continue
         count, res = analyze_method_run(setting, run)
-        if count < COUNT:
+        if count < COUNT / 2:
             continue
-        # if res["is_pne"][-1] > is_pne_max:
-        #     is_pne_max = res["is_pne"][-1]
-        #     final = res.copy()
-        if res["regrets"][-1] < regret_min:
-            regret_min = res["regrets"][-1]
+        if res["is_pne"][-1] > is_pne_max:
+            is_pne_max = res["is_pne"][-1]
             final = res.copy()
+        # if res["regrets"][-1] < regret_min:
+        #     regret_min = res["regrets"][-1]
+        #     final = res.copy()
     if final is not None:
         print(setting, method, "best", final["is_pne"][-1], final["regrets"][-1])
     return final
@@ -192,7 +192,7 @@ def plot_all():
     fig, axes = plt.subplots(2, 4, figsize=(17, 6.5))
 
     dis = "beta"
-    T = 500000
+    T = 1000000
     plot_part(4, 4, T, dis, "normal", axes[0][0], axes[1][0])
     plot_part(4, 4, T, dis, "same", axes[0][1], axes[1][1])
     plot_part(7, 4, T, dis, "normal", axes[0][2], axes[1][2])

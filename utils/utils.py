@@ -70,6 +70,7 @@ def best_best_response_dynamics(N, K, mu, weights, threshold=1000, res=None):
             r = mu * weights[ii] / (w + weights[ii] + 1e-9)
             w[tt] += weights[ii][tt]
             res[ii] = tt
+            print(res, ii, kk, tt, max_inc)
     return False
 
 
@@ -156,19 +157,19 @@ def main():
     mu = np.array([0.84538588, 0.09, 0.41458564, 0.20688417])
     weights = np.array(
         [
-            [5.18598184, 0, 0, 0],
-            [0, 0, 1.3919881, 0],
-            [0, 0, 0, 0.97509145],
-            [0.85953784, 0, 0.80106269, 0],
-            [0, 0.01420995, 0, 0.54831471],
-            [0, 0, 0.58696091, 0.92798576],
-            [0, 0.45314008, 0.56469558, 0],
+            [5.18598184, 0,          0,          0],
+            [0,          0,          1.3919881,  0],
+            [0,          0,          0,          0.97509145],
+            [0.85953784, 0,          0.80106269, 0],
+            [0,          0.01420995, 0,          0.54831471],
+            [0,          0,          0.58696091, 0.92798576],
+            [0,          0.45314008, 0.56469558, 0],
         ]
     )
     res = [0] * N
-    print(dfs(0, res, N, K, mu, weights))
-
-    count_PNE_ratio()
+    # print(dfs(0, res, N, K, mu, weights))
+    print(best_best_response_dynamics(N, K, mu, weights))
+    # count_PNE_ratio()
     # print(N, K, mu, weights)
 
 

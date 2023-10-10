@@ -16,7 +16,7 @@ search_space:
     _value: [ 100, 200, 500, 1000, 2000 ]
 
 
-trial_command: python main.py --nni --method TotalReward -T 500000 -K 4
+trial_command: python main.py --nni --method TotalReward -T 1000000 -K 4
 trial_code_directory: ..
 
 trial_concurrency: 10

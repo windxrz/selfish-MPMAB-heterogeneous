@@ -17,7 +17,7 @@ search_space:
 
 
 
-trial_command: python main.py --nni --method SMAA -T 500000 -K 4
+trial_command: python main.py --nni --method SMAA -T 1000000 -K 4
 trial_code_directory: ..
 
 trial_concurrency: 8

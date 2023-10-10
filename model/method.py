@@ -175,8 +175,8 @@ class Ours:
         self.loop = loop
 
         if loop.delta > 1e-6:
-            self.c1 = np.ceil(c1 * np.log(T) * K * K / loop.delta / loop.delta)
-            self.gamma = loop.delta / 4 / self.N
+            self.gamma = c1 * loop.delta / 4 / self.N
+            self.c1 = min(np.ceil(c1 * np.log(T) * K * K / loop.delta / loop.delta), self.T / 10 / K)
             self.gammas = np.random.normal(0, self.gamma, K)
         else:
             self.c1 = np.ceil(c1 * np.log(T) * K * K)
@@ -202,7 +202,7 @@ class Ours:
 
         self.count_best = np.zeros(self.K)
 
-        self.threshold = 1e-4
+        self.threshold = 1e-5
     
         self.probabilities = np.random.rand(self.T * 10)
         self.prob_idx = 0
@@ -245,7 +245,7 @@ class Ours:
                 if self.remaining == 1:
                     self.mood = "content"
                     self.action = k
-                    self.utitlity = (
+                    self.utility = (
                         self.mu_hat[k]
                         * self.last_personal_reward
                         / (self.last_arm_reward + 1e-6)
@@ -277,9 +277,12 @@ class Ours:
         self.last_personal_reward, self.last_arm_reward = personal_reward, arm_reward
 
         if self.phase == "learning":
-            utility = (
-                personal_reward / (arm_reward + 1e-6) * self.mu_hat[k] + self.gammas[k]
-            )
+            if arm_reward == 0:
+                utility = 0
+            else:
+                utility = (
+                    personal_reward / (arm_reward) * self.mu_hat[k] + self.gammas[k]
+                )
             self.last_utility = utility
             p = self.next_prob()
             if self.mood == "discontent":

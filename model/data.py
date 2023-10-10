@@ -97,10 +97,10 @@ class Loop:
 
         weight_choices = np.array(weight_choices)
         arm_rewards = self.rewards[t][choices]
-        personal_rewards = (self.rewards[t] / (weight + 1e-6))[choices]
+        personal_rewards = (self.rewards[t] / (weight + 1e-8))[choices]
         personal_rewards = personal_rewards * weight_choices
 
-        personal_expected_rewards = (self.mu / (weight + 1e-6))[choices]
+        personal_expected_rewards = (self.mu / (weight + 1e-8))[choices]
         personal_expected_rewards = personal_expected_rewards * weight_choices
 
         weight = np.tile(weight, self.N).reshape(self.N, -1)
@@ -111,7 +111,7 @@ class Loop:
         weight = weight + weight_choices
         reward_deviation = (
             np.tile(self.mu.reshape(-1, self.K), [self.N, 1])
-            / (weight + 1e-6)
+            / (weight + 1e-8)
             * weight_choices
         )
         reward_best_deviation = np.max(reward_deviation, axis=1)
@@ -119,4 +119,5 @@ class Loop:
 
         regrets = np.array(regrets)
         is_pne = (np.sum(regrets) <= 1e-6) and (np.sum(personal_expected_rewards) >= self.welfare - 1e-6)
+        self.tmp_personal_expected_rewards = np.sum(personal_expected_rewards)
         return arm_rewards, personal_rewards, is_pne, regrets
