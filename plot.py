@@ -43,15 +43,14 @@ COLOR_LIST = [
 COLOR = {
     "SMAA": "#FB9649",
     "TotalReward": "#605CB8",
-    "ExploreThenCommit": "#53C292",
+    "SelfishRobustMMAB": "#53C292",
     # "ExploreThenCommitPlus": "#FFE680",
     "Ours": "#E64640",
 }
 MARKER = {
     "SMAA": "^",
     "TotalReward": "p",
-    "ExploreThenCommit": "s",
-    # "ExploreThenCommitPlus": "P",
+    "SelfishRobustMMAB": "s",
     "Ours": "o",
 }
 

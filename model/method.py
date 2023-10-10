@@ -326,3 +326,57 @@ class Ours:
                 self.count_best[k] += 1
             # if self.rank == 0:
             #     print(self.mood, self.action, self.utility)
+
+
+class SelfishRobustMMAB:
+    def __init__(self, N, K, T, rank, loop, beta, seed=0):
+        set_seed(seed)
+        self.N = N
+        self.K = K
+        self.T = T
+        self.rank = rank
+        self.rewards = np.zeros(self.K)
+        self.count = np.zeros(self.K)
+        self.beta = beta
+        self.pull_list = []
+        self.loop = loop
+
+        self.coin = np.random.rand(T) > 0.5
+        self.coin_count = 0
+
+        self.KK = int(np.ceil(self.K / self.N)) * self.N
+
+    def pull(self, t):
+        if t < self.K:
+            k = t
+        elif t < self.KK:
+            k = np.random.randint(0, self.K)
+        else:
+            if t % self.N == 0:
+                mu = self.rewards / self.count
+                idx = np.argsort(mu)[::-1]
+                z = mu[idx[self.N - 1]]
+
+                self.candidate = []
+                tmp = self.count * kl_divergence(mu, z)
+                target = self.beta * (np.log(t + 1) + 4 * np.log(np.log(t + 1)))
+                for i in range(self.K):
+                    if mu[i] < z and tmp[i] <= target:
+                        self.candidate.append(i)
+
+                self.pne_list = idx[: self.N]
+                self.explore_idx = self.N - 1
+
+            idx = (self.rank + t) % self.N
+            k = self.pne_list[idx]
+            if idx == self.explore_idx and len(self.candidate) > 0:
+                if self.coin[self.coin_count]:
+                    k = np.random.choice(self.candidate)
+                self.coin_count += 1
+        self.pull_list.append(k)
+        return k
+
+    def update(self, arm_reward, personal_reward, choices):
+        k = self.pull_list[-1]
+        self.rewards[k] += arm_reward
+        self.count[k] += 1

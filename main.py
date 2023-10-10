@@ -10,6 +10,7 @@ from model.data import Loop
 from model.method import (
     SMAA,
     TotalReward,
+    SelfishRobustMMAB,
     Ours,
 )
 from utils.delta import calculate_delta
@@ -33,6 +34,7 @@ def parse_args():
             "SMAA",
             "TotalReward",
             "Ours",
+            "SelfishRobustMMAB",
         ],
         default="Ours",
     )
@@ -40,8 +42,10 @@ def parse_args():
     # TotalReward
     parser.add_argument("--alpha", type=int, default=500)
 
-    # SMAA
+    # SMAA and SelfishRobustMMAb
     parser.add_argument("--beta", type=float, default=0.1)
+
+    # SMAA
     parser.add_argument("--tolerance", type=float, default=1e-6)
 
     # Ours
@@ -87,6 +91,8 @@ def main():
         method_name = "{}_c1_{}_c2_{}_c3_{}_eta_{}_epsilon_{}".format(
             method, args.c1, args.c2, args.c3, args.eta, args.epsilon
         )
+    elif method == "SelfishRobustMMAB":
+        method_name = "{}_beta_{}".format(method, args.beta)
 
     res_path_base = os.path.join(
         "results",
@@ -146,6 +152,8 @@ def main():
                         seed=i,
                         debug=args.debug,
                     )
+                elif method == "SelfishRobustMMAB":
+                    player = SelfishRobustMMAB(N, K, T, i, loop, beta=args.beta, seed=i)
 
                 players.append(player)
 
