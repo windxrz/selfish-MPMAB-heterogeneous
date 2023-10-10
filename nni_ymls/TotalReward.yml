@@ -1,7 +1,7 @@
 search_space:
   N:
     _type: choice
-    _value: [ 4, 7 ]
+    _value: [ 3, 4, 5 ]
   
   dis:
     _type: choice
@@ -20,7 +20,7 @@ trial_command: python main.py --nni --method TotalReward -T 1000000 -K 4
 trial_code_directory: ..
 
 trial_concurrency: 10
-max_trial_number: 20
+max_trial_number: 30
 
 tuner:
   name: TPE

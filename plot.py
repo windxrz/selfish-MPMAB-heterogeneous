@@ -192,10 +192,10 @@ def plot_all():
 
     dis = "beta"
     T = 1000000
-    plot_part(4, 4, T, dis, "normal", axes[0][0], axes[1][0])
-    plot_part(4, 4, T, dis, "same", axes[0][1], axes[1][1])
-    plot_part(7, 4, T, dis, "normal", axes[0][2], axes[1][2])
-    plot_part(7, 4, T, dis, "same", axes[0][3], axes[1][3])
+    plot_part(3, 4, T, dis, "normal", axes[0][0], axes[1][0])
+    plot_part(3, 4, T, dis, "same", axes[0][1], axes[1][1])
+    plot_part(5, 4, T, dis, "normal", axes[0][2], axes[1][2])
+    plot_part(5, 4, T, dis, "same", axes[0][3], axes[1][3])
 
     axes[0][0].set_ylabel("Regrets", size=FONTSIZE)
     axes[1][0].set_ylabel("\# of Non-equilibrium rounds", size=FONTSIZE)

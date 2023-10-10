@@ -221,7 +221,7 @@ class Ours:
 
     def pull(self, t):
         if t < self.c1 * self.K:
-            k = t % self.K
+            k = (t + self.rank) % self.K
         else:
             if t == self.c1 * self.K:
                 self.mu_hat = self.rewards / (self.count + 1e-6)

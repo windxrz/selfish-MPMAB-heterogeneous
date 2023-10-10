@@ -1,7 +1,7 @@
 from model.data import Loop
 
 def generate_data():
-    Ns = [4, 7]
+    Ns = [3, 5]
     K = 4
     T = 10000
     dises = ["beta"]
