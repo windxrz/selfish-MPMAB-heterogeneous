@@ -1,8 +1,12 @@
 search_space:
   N:
     _type: choice
-    _value: [ 3, 4, 5 ]
+    _value: [ 4 ]
   
+  N:
+    _type: choice
+    _value: [ 3, 4 ]
+
   dis:
     _type: choice
     _value: [ "beta" ]
@@ -21,7 +25,7 @@ search_space:
 
   c3:
     _type: choice
-    _value: [ 200, 500, 1000 ]
+    _value: [ 100, 200 ]
 
   eta:
     _type: choice
@@ -29,14 +33,14 @@ search_space:
 
   epsilon:
     _type: choice
-    _value: [ 0.001, 0.003, 0.005 ]
+    _value: [ 0.0002, 0.0005, 0.001, 0.003, 0.005 ]
 
 
-trial_command: python main.py --nni --method Ours -T 1000000 -K 4
+trial_command: python main.py --nni --method Ours -T 1000000
 trial_code_directory: ..
 
-trial_concurrency: 60
-max_trial_number: 972
+trial_concurrency: 40
+max_trial_number: 720
 
 tuner:
   name: TPE

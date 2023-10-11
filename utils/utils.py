@@ -70,13 +70,13 @@ def best_best_response_dynamics(N, K, mu, weights, threshold=1000, res=None):
             r = mu * weights[ii] / (w + weights[ii] + 1e-9)
             w[tt] += weights[ii][tt]
             res[ii] = tt
-            print(res, ii, kk, tt, max_inc)
+            # print(res, ii, kk, tt, max_inc)
     return False
 
 
 def dfs(i, res, N, K, mu, weights):
     if i == N:
-        if best_best_response_dynamics(N, K, mu, weights, res=res):
+        if best_best_response_dynamics(N, K, mu, weights, threshold=10, res=res):
             print(N, K, res)
             return True
         return False
@@ -155,20 +155,29 @@ def main():
 
     N, K = 7, 4
     mu = np.array([0.84538588, 0.09, 0.41458564, 0.20688417])
+    tmp = 1e-6
     weights = np.array(
         [
-            [5.18598184, 0,          0,          0],
-            [0,          0,          1.3919881,  0],
-            [0,          0,          0,          0.97509145],
-            [0.85953784, 0,          0.80106269, 0],
-            [0,          0.01420995, 0,          0.54831471],
-            [0,          0,          0.58696091, 0.92798576],
-            [0,          0.45314008, 0.56469558, 0],
+            [5.18598184, tmp, tmp, tmp],
+            [tmp, tmp, 1.3919881, tmp],
+            [tmp, tmp, tmp, 0.97509145],
+            [0.85953784, tmp, 0.80106269, tmp],
+            [tmp, 0.01420995, tmp, 0.54831471],
+            [tmp, tmp, 0.58696091, 0.92798576],
+            [tmp, 0.45314008, 0.56469558, tmp],
         ]
     )
+    mu = mu / np.max(mu)
+    mu = mu.round(4)
+    weights = weights / np.max(weights, axis=0, keepdims=True)
+    weights = np.round(weights, 4)
+    weights[weights == 0] = weights[weights == 0] + 0.001
+    weights = weights.round(4)
+    print(mu)
+    print(weights)
     res = [0] * N
-    # print(dfs(0, res, N, K, mu, weights))
-    print(best_best_response_dynamics(N, K, mu, weights))
+    print(dfs(0, res, N, K, mu, weights))
+    # print(best_best_response_dynamics(N, K, mu, weights))
     # count_PNE_ratio()
     # print(N, K, mu, weights)
 

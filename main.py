@@ -106,7 +106,7 @@ def main():
     pne_nums = []
     regrets_sum = []
     for seed_data in range(0, total_runs):
-        if args.debug and seed_data != 2:
+        if args.debug and seed_data != 0:
             continue
             
         print("Running {}/{}".format(seed_data + 1, total_runs))
@@ -187,6 +187,7 @@ def main():
                     # if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
                     #     count_tmp[tmp] += 1
                     print([(player.mood, player.action, round(player.utility, 2), round(player.last_utility, 2)) for player in players], choices, is_pne, loop.mu.round(2))
+                    print("counting best: ", [player.count_best.argmax() for player in players])
                     # if choices == [3, 0, 1, 2]:
                     #     exit()
                     # exit()

@@ -41,16 +41,16 @@ COLOR_LIST = [
 
 
 COLOR = {
-    "SMAA": "#FB9649",
     "TotalReward": "#605CB8",
     "SelfishRobustMMAB": "#53C292",
+    "SMAA": "#FB9649",
     # "ExploreThenCommitPlus": "#FFE680",
     "Ours": "#E64640",
 }
 MARKER = {
-    "SMAA": "^",
     "TotalReward": "p",
     "SelfishRobustMMAB": "s",
+    "SMAA": "^",
     "Ours": "o",
 }
 
@@ -100,7 +100,7 @@ def analyze_method_run(setting, method):
     final["regrets"] = np.mean(final["regrets"], axis=0)
     final["is_pne"] = np.mean(final["is_pne"], axis=0)
 
-    print(setting, method, count, final["is_pne"][-1], final["regrets"][-1])
+    # print(setting, method, count, final["is_pne"][-1], final["regrets"][-1])
 
     return count, final
 
@@ -109,20 +109,24 @@ def analyze_method(setting, method):
     is_pne_max = 0
     regret_min = 1e9
     final = None
+    run_setting = ""
     for run in sorted(os.listdir(os.path.join("results", setting))):
         if method + "_" not in run:
             continue
         count, res = analyze_method_run(setting, run)
-        if count < COUNT / 2:
+        if count < COUNT:
             continue
-        if res["is_pne"][-1] > is_pne_max:
-            is_pne_max = res["is_pne"][-1]
-            final = res.copy()
-        # if res["regrets"][-1] < regret_min:
-        #     regret_min = res["regrets"][-1]
+        # if res["is_pne"][-1] > is_pne_max:
+        #     is_pne_max = res["is_pne"][-1]
         #     final = res.copy()
+        #     run_setting = run
+        if res["regrets"][-1] < regret_min:
+            regret_min = res["regrets"][-1]
+            final = res.copy()
+            run_setting = run
+
     if final is not None:
-        print(setting, method, "best", final["is_pne"][-1], final["regrets"][-1])
+        print(setting, method, "best", run_setting, final["is_pne"][-1], final["regrets"][-1])
     return final
 
 
@@ -171,18 +175,18 @@ def plot_part(N, K, T, dis, cate, ax1, ax2):
             markeredgewidth=MARKEREDGEWIDTH,
         )
 
-        ax1.ticklabel_format(style="sci", scilimits=(-3, 4), axis="both")
-        ax2.ticklabel_format(style="sci", scilimits=(-3, 4), axis="both")
+        ax1.ticklabel_format(style="sci", scilimits=(-3, 3), axis="both")
+        ax2.ticklabel_format(style="sci", scilimits=(-3, 3), axis="both")
 
         ax1.set_xticks(np.arange(0, T + 1, T // 5))
         ax2.set_xticks(np.arange(0, T + 1, T // 5))
         ax1.tick_params(axis="both", which="major", labelsize=TICKFONTSIZE)
         ax2.tick_params(axis="both", which="major", labelsize=TICKFONTSIZE)
 
-        ax1.set_title(
-            "$N={}$, {}".format(N, cate), size=FONTSIZE, pad=15
+        ax2.set_title(
+            "{}, {}".format("$N < K$" if N < K else "$N \ge K$", "Equal weights" if cate == "same" else "Different weights"), size=FONTSIZE, pad=15
         )
-        ax2.set_xlabel("Round", size=FONTSIZE)
+        ax1.set_xlabel("Round", size=FONTSIZE)
 
 
 
@@ -192,15 +196,17 @@ def plot_all():
 
     dis = "beta"
     T = 1000000
-    plot_part(3, 4, T, dis, "normal", axes[0][0], axes[1][0])
-    plot_part(3, 4, T, dis, "same", axes[0][1], axes[1][1])
-    plot_part(5, 4, T, dis, "normal", axes[0][2], axes[1][2])
-    plot_part(5, 4, T, dis, "same", axes[0][3], axes[1][3])
+    plot_part(2, 3, T, dis, "same", axes[1][0], axes[0][0])
+    plot_part(2, 3, T, dis, "normal", axes[1][1], axes[0][1])
+    plot_part(4, 4, T, dis, "same", axes[1][2], axes[0][2])
+    plot_part(4, 4, T, dis, "normal", axes[1][3], axes[0][3])
+    # plot_part(5, 4, T, dis, "normal", axes[0][4], axes[1][4])
+    # plot_part(5, 4, T, dis, "same", axes[0][5], axes[1][5])
 
-    axes[0][0].set_ylabel("Regrets", size=FONTSIZE)
-    axes[1][0].set_ylabel("\# of Non-equilibrium rounds", size=FONTSIZE)
+    axes[1][0].set_ylabel("Regrets", size=FONTSIZE)
+    axes[0][0].set_ylabel("\# of Non-PNE rounds", size=FONTSIZE)
 
-    lines, labels = axes[0, 1].get_legend_handles_labels()
+    lines, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(
         lines,
         labels,

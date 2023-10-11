@@ -1,7 +1,7 @@
 search_space:
   N:
     _type: choice
-    _value: [ 3, 4, 5 ]
+    _value: [ 2, 3, 4 ]
   
   dis:
     _type: choice
@@ -17,7 +17,7 @@ search_space:
 
 
 
-trial_command: python main.py --nni --method SMAA -T 1000000 -K 4
+trial_command: python main.py --nni --method SMAA -T 1000000 -K 3
 trial_code_directory: ..
 
 trial_concurrency: 8

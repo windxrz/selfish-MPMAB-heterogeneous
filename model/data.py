@@ -70,7 +70,7 @@ class Loop:
 
                 delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(self.weights, self.mu)
                 print("delta:", delta_pne, delta_nopne, self.delta)
-                if delta_pne < 500 and ((self.N <= 4 and self.delta > 0.05) or (self.N == 5 and self.delta > 0.01) or (self.N > 5 and self.delta > 1e-4) or (self.N < self.K and cate == "rewardsame")):
+                if delta_pne < 500 and ((self.N <= 4 and self.delta > 0.03) or (self.N == 5 and self.delta > 0.01) or (self.N > 5 and self.delta > 1e-4) or (self.N < self.K and cate == "rewardsame")):
                     break
             dic = {}
             dic["weights"] = self.weights
