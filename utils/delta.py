@@ -205,10 +205,10 @@ if __name__ == "__main__":
     print(calculate_delta(weights, rewards, isprint=isprint))
 
     # Multiple PNE: there exist insufficient PNE
-    N, K = 3, 3
-    weights = np.tile([[0.8], [0.3], [0.2]], [1, K])
-    rewards = np.array([0.6, 0.4, 0.2])
-    print(calculate_delta(weights, rewards, isprint=isprint))
+    # N, K = 3, 3
+    # weights = np.tile([[0.8], [0.3], [0.2]], [1, K])
+    # rewards = np.array([0.6, 0.4, 0.2])
+    # print(calculate_delta(weights, rewards, isprint=isprint))
 
     # while True:
     #     # weights = [round(random.uniform(0.1, 1), 1) for _ in range(N)]

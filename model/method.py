@@ -163,7 +163,7 @@ class TotalReward:
 
 
 class Ours:
-    def __init__(self, N, K, T, rank, loop, c1, c2, c3, eta, epsilon, seed=0, debug=False):
+    def __init__(self, N, K, T, rank, loop, c1, c2, c3, eta, epsilon, seed=0, debug=False, no_gamma=False):
         set_seed(seed)
         self.N = N
         self.K = K
@@ -182,6 +182,11 @@ class Ours:
             self.c1 = np.ceil(c1 * np.log(T) * K * K)
             self.gamma = 0
             self.gammas = np.zeros(K)
+        
+        if no_gamma:
+            self.gamma = 0
+            self.gammas = np.zeros(K)
+
         print("Exploring phase:", self.c1)
         self.c2 = c2
         self.c3 = c3

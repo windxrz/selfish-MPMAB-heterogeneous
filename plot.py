@@ -44,13 +44,14 @@ COLOR = {
     "TotalReward": "#605CB8",
     "SelfishRobustMMAB": "#53C292",
     "SMAA": "#FB9649",
-    # "ExploreThenCommitPlus": "#FFE680",
+    # "Oursnogamma": "#CBBD62",
     "Ours": "#E64640",
 }
 MARKER = {
     "TotalReward": "p",
     "SelfishRobustMMAB": "s",
     "SMAA": "^",
+    # "Oursnogamma": "H",
     "Ours": "o",
 }
 
@@ -198,13 +199,15 @@ def plot_all():
     T = 1000000
     plot_part(2, 3, T, dis, "same", axes[1][0], axes[0][0])
     plot_part(2, 3, T, dis, "normal", axes[1][1], axes[0][1])
-    plot_part(4, 4, T, dis, "same", axes[1][2], axes[0][2])
-    plot_part(4, 4, T, dis, "normal", axes[1][3], axes[0][3])
+    plot_part(4, 4, T * 3, dis, "same", axes[1][2], axes[0][2])
+    plot_part(4, 4, T * 3, dis, "normal", axes[1][3], axes[0][3])
+    # axes[1][2].set_ylim(-5e3, 55e3)
+    # axes[1][3].set_ylim(-5e3, 55e3)
     # plot_part(5, 4, T, dis, "normal", axes[0][4], axes[1][4])
     # plot_part(5, 4, T, dis, "same", axes[0][5], axes[1][5])
 
-    axes[1][0].set_ylabel("Regrets", size=FONTSIZE)
-    axes[0][0].set_ylabel("\# of Non-PNE rounds", size=FONTSIZE)
+    axes[1][0].set_ylabel("Average Regret", size=FONTSIZE)
+    axes[0][0].set_ylabel("\# of Non-PNE Rounds", size=FONTSIZE)
 
     lines, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(

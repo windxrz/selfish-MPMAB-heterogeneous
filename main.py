@@ -55,6 +55,7 @@ def parse_args():
     parser.add_argument("--eta", type=float, default=0)
     parser.add_argument("--epsilon", type=float, default=5e-3)
     parser.add_argument("--debug", action="store_true", default=False)
+    parser.add_argument("--no-gamma", action="store_true", default=False)
 
     parser.add_argument("--nni", action="store_true")
 
@@ -88,8 +89,8 @@ def main():
             method, args.beta, args.tolerance
         )
     elif method == "Ours":
-        method_name = "{}_c1_{}_c2_{}_c3_{}_eta_{}_epsilon_{}".format(
-            method, args.c1, args.c2, args.c3, args.eta, args.epsilon
+        method_name = "{}{}_c1_{}_c2_{}_c3_{}_eta_{}_epsilon_{}".format(
+            method, "nogamma" if args.no_gamma else "", args.c1, args.c2, args.c3, args.eta, args.epsilon
         )
     elif method == "SelfishRobustMMAB":
         method_name = "{}_beta_{}".format(method, args.beta)
@@ -151,6 +152,7 @@ def main():
                         epsilon=args.epsilon,
                         seed=i,
                         debug=args.debug,
+                        no_gamma=args.no_gamma,
                     )
                 elif method == "SelfishRobustMMAB":
                     player = SelfishRobustMMAB(N, K, T, i, loop, beta=args.beta, seed=i)

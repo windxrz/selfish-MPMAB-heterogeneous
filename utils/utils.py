@@ -1,4 +1,9 @@
 import numpy as np
+from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import Pool
+from itertools import product
+from joblib import Parallel, delayed
 
 
 def best_response_dynamics(N, K, mu, weights, threshold=1000):
@@ -102,30 +107,49 @@ def count_PNE_ratio():
         if trial % 100 == 0:
             print(non_exist, trial, non_exist / trial)
 
+def generate_matrix(N, K):
+    possible_values = np.linspace(0, 1, 11)
+    return [np.array(p).reshape(N, K) for p in product(possible_values, repeat=N*K)]
+
+def count_PNE_ratio_NK(N, K):
+    weights = generate_matrix(N, K)
+    mus = generate_matrix(K, 1)
+    trial = 0
+    non_exist = 0
+    for weight in tqdm(weights):
+        for mu in mus:
+            mu = mu.reshape(-1)
+            trial += 1
+            if not best_best_response_dynamics(N, K, mu, weight):
+                non_exist += 1
+                print(N, K, mu, weight)
+    print(N, K, trial, non_exist)
+
+
 
 def main():
-    z = 0
-    K = 5
-    N = 14
-    mu = np.array([0.84538588, 0.08993399, 0.02328485, 0.41458564, 0.20688417])
-    weights = np.array(
-        [
-            [0.85953784, 0.1472667, 0.23333599, 0.80106269, 0.25534665],
-            [0.9662989, 0.18805253, 0.19130415, 0.73760676, 0.96716714],
-            [0.31660732, 0.61450541, 0.57473792, 0.82624625, 0.80292198],
-            [0.01589213, 0.16420416, 0.37400423, 0.56574185, 0.12780276],
-            [0.39903661, 0.88823095, 0.84845857, 0.58696091, 0.92798576],
-            [0.01584441, 0.01420995, 0.93271437, 0.13611637, 0.54831471],
-            [0.76849256, 0.31070712, 0.9855136, 0.00873075, 0.23346988],
-            [0.60553975, 0.23878048, 0.74958383, 0.25162698, 0.5263092],
-            [0.89518715, 0.5396467, 0.07764075, 0.56965229, 0.42519371],
-            [0.48343897, 0.34573245, 0.13526474, 0.13658451, 0.97509145],
-            [0.35926791, 0.45314008, 0.37322034, 0.56469558, 0.80148231],
-            [0.83973002, 0.33033441, 0.94436208, 0.83280573, 0.21922857],
-            [0.31522223, 0.98746007, 0.60471945, 0.88926758, 0.62860021],
-            [0.79551123, 0.9280455, 0.37032116, 0.4726352, 0.7264403],
-        ]
-    )
+    # z = 0
+    # K = 5
+    # N = 14
+    # mu = np.array([0.84538588, 0.08993399, 0.02328485, 0.41458564, 0.20688417])
+    # weights = np.array(
+    #     [
+    #         [0.85953784, 0.1472667, 0.23333599, 0.80106269, 0.25534665],
+    #         [0.9662989, 0.18805253, 0.19130415, 0.73760676, 0.96716714],
+    #         [0.31660732, 0.61450541, 0.57473792, 0.82624625, 0.80292198],
+    #         [0.01589213, 0.16420416, 0.37400423, 0.56574185, 0.12780276],
+    #         [0.39903661, 0.88823095, 0.84845857, 0.58696091, 0.92798576],
+    #         [0.01584441, 0.01420995, 0.93271437, 0.13611637, 0.54831471],
+    #         [0.76849256, 0.31070712, 0.9855136, 0.00873075, 0.23346988],
+    #         [0.60553975, 0.23878048, 0.74958383, 0.25162698, 0.5263092],
+    #         [0.89518715, 0.5396467, 0.07764075, 0.56965229, 0.42519371],
+    #         [0.48343897, 0.34573245, 0.13526474, 0.13658451, 0.97509145],
+    #         [0.35926791, 0.45314008, 0.37322034, 0.56469558, 0.80148231],
+    #         [0.83973002, 0.33033441, 0.94436208, 0.83280573, 0.21922857],
+    #         [0.31522223, 0.98746007, 0.60471945, 0.88926758, 0.62860021],
+    #         [0.79551123, 0.9280455, 0.37032116, 0.4726352, 0.7264403],
+    #     ]
+    # )
 
     # N, K = 4, 4
     # mu = np.array([0.02, 1, 1.1, 0.8])
@@ -153,34 +177,54 @@ def main():
     # print(best_best_response_dynamics(N, K, mu, weights))
     # return
 
-    N, K = 7, 4
-    mu = np.array([0.84538588, 0.09, 0.41458564, 0.20688417])
-    tmp = 1e-6
-    weights = np.array(
-        [
-            [5.18598184, tmp, tmp, tmp],
-            [tmp, tmp, 1.3919881, tmp],
-            [tmp, tmp, tmp, 0.97509145],
-            [0.85953784, tmp, 0.80106269, tmp],
-            [tmp, 0.01420995, tmp, 0.54831471],
-            [tmp, tmp, 0.58696091, 0.92798576],
-            [tmp, 0.45314008, 0.56469558, tmp],
-        ]
-    )
-    mu = mu / np.max(mu)
-    mu = mu.round(4)
-    weights = weights / np.max(weights, axis=0, keepdims=True)
-    weights = np.round(weights, 4)
-    weights[weights == 0] = weights[weights == 0] + 0.001
-    weights = weights.round(4)
-    print(mu)
-    print(weights)
-    res = [0] * N
-    print(dfs(0, res, N, K, mu, weights))
+    # N, K = 7, 4
+    # mu = np.array([0.84538588, 0.09, 0.41458564, 0.20688417])
+    # tmp = 1e-6
+    # weights = np.array(
+    #     [
+    #         [5.18598184, tmp, tmp, tmp],
+    #         [tmp, tmp, 1.3919881, tmp],
+    #         [tmp, tmp, tmp, 0.97509145],
+    #         [0.85953784, tmp, 0.80106269, tmp],
+    #         [tmp, 0.01420995, tmp, 0.54831471],
+    #         [tmp, tmp, 0.58696091, 0.92798576],
+    #         [tmp, 0.45314008, 0.56469558, tmp],
+    #     ]
+    # )
+    # mu = mu / np.max(mu)
+    # mu = mu.round(4)
+    # weights = weights / np.max(weights, axis=0, keepdims=True)
+    # weights = np.round(weights, 4)
+    # weights[weights == 0] = weights[weights == 0] + 0.001
+    # weights = weights.round(4)
+    # print(mu)
+    # print(weights)
+    # res = [0] * N
+    # print(dfs(0, res, N, K, mu, weights))
     # print(best_best_response_dynamics(N, K, mu, weights))
     # count_PNE_ratio()
     # print(N, K, mu, weights)
 
+    count_PNE_ratio_NK(3, 2)
 
 if __name__ == "__main__":
     main()
+
+# if __name__ == '__main__':
+#     N, K = 2, 3  # Replace with your own values
+#     weights = generate_matrix(N, K)
+#     mus = generate_matrix(K, 1)
+
+#     args_list = [(N, K, weight, mu) for weight in weights for mu in mus]
+
+#     trial = 0
+#     non_exist = 0
+
+#     with Pool() as pool:
+#         results = list(tqdm(pool.imap_unordered(worker, args_list), total=len(args_list)))
+
+#     for t, ne in results:
+#         trial += t
+#         non_exist += ne
+
+#     print(N, K, trial, non_exist)
