@@ -38,7 +38,7 @@ class SMAA:
         self.count = np.zeros(self.K)
         self.tolerance = tolerance
         self.beta = beta
-        self.pull_list = []
+        self.last_pull = 0
         self.loop = loop
 
         self.coin = np.random.rand(T) > 0.5
@@ -87,11 +87,11 @@ class SMAA:
                 if self.coin[self.coin_count]:
                     k = np.random.choice(self.candidate)
                 self.coin_count += 1
-        self.pull_list.append(k)
+        self.last_pull = k
         return k
 
     def update(self, arm_reward, personal_reward, choices):
-        k = self.pull_list[-1]
+        k = self.last_pull
         self.rewards[k] += arm_reward
         self.count[k] += 1
 
@@ -109,7 +109,7 @@ class TotalReward:
         self.count = np.zeros(self.K)
         self.T0 = self.alpha * np.log(T)
         self.pne_list = None
-        self.pull_list = []
+        self.last_pull = 0
         set_seed(seed)
 
     def pull(self, t):
@@ -153,11 +153,11 @@ class TotalReward:
                             i += 1
                 print(self.pne_list)
             k = self.pne_list[(self.rank + t) % self.N]
-        self.pull_list.append(k)
+        self.last_pull = k
         return k
 
     def update(self, arm_reward, personal_reward, choices):
-        k = self.pull_list[-1]
+        k = self.last_pull
         self.rewards[k] += arm_reward
         self.count[k] += 1
 
@@ -172,7 +172,7 @@ class SelfishRobustMMAB:
         self.rewards = np.zeros(self.K)
         self.count = np.zeros(self.K)
         self.beta = beta
-        self.pull_list = []
+        self.last_pull = 0
         self.loop = loop
 
         self.coin = np.random.rand(T) > 0.5
@@ -207,11 +207,11 @@ class SelfishRobustMMAB:
                 if self.coin[self.coin_count]:
                     k = np.random.choice(self.candidate)
                 self.coin_count += 1
-        self.pull_list.append(k)
+        self.last_pull = k
         return k
 
     def update(self, arm_reward, personal_reward, choices):
-        k = self.pull_list[-1]
+        k = self.last_pull
         self.rewards[k] += arm_reward
         self.count[k] += 1
 
@@ -240,7 +240,7 @@ class Ours:
         self.rank = rank
         self.rewards = np.zeros(self.K)
         self.count = np.zeros(self.K)
-        self.pull_list = []
+        self.last_pull = 0
         self.loop = loop
 
         if loop.delta > 1e-6:
@@ -347,11 +347,11 @@ class Ours:
 
             self.remaining -= 1
 
-        self.pull_list.append(k)
+        self.last_pull = k
         return k
 
     def update(self, arm_reward, personal_reward, choices):
-        k = self.pull_list[-1]
+        k = self.last_pull
         self.rewards[k] += arm_reward
         self.count[k] += 1
         self.last_personal_reward, self.last_arm_reward = personal_reward, arm_reward
