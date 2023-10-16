@@ -6,7 +6,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import rc
 
-
 rc("font", **{"family": "sans-serif", "sans-serif": ["Times New Roman"]})
 
 rc("text", usetex=True)
@@ -127,7 +126,14 @@ def analyze_method(setting, method):
             run_setting = run
 
     if final is not None:
-        print(setting, method, "best", run_setting, final["is_pne"][-1], final["regrets"][-1])
+        print(
+            setting,
+            method,
+            "best",
+            run_setting,
+            final["is_pne"][-1],
+            final["regrets"][-1],
+        )
     return final
 
 
@@ -185,10 +191,14 @@ def plot_part(N, K, T, dis, cate, ax1, ax2):
         ax2.tick_params(axis="both", which="major", labelsize=TICKFONTSIZE)
 
         ax2.set_title(
-            "{}, {}".format("$N < K$" if N < K else "$N \ge K$", "Equal weights" if cate == "same" else "Different weights"), size=FONTSIZE, pad=15
+            "{}, {}".format(
+                "$N < K$" if N < K else "$N \ge K$",
+                "Equal weights" if cate == "same" else "Different weights",
+            ),
+            size=FONTSIZE,
+            pad=15,
         )
         ax1.set_xlabel("Round", size=FONTSIZE)
-
 
 
 def plot_all():

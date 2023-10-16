@@ -1,8 +1,8 @@
+import os
+import pickle as pkl
 import random
 
 import numpy as np
-import pickle as pkl
-import os
 
 from utils.delta import calculate_delta
 
@@ -22,7 +22,9 @@ class Loop:
 
         if not os.path.exists("data"):
             os.mkdir("data")
-        filename = "data/N_{}_K_{}_dis_{}_cate_{}_seed_{}.pkl".format(N, K, dis, cate, seed)
+        filename = "data/N_{}_K_{}_dis_{}_cate_{}_seed_{}.pkl".format(
+            N, K, dis, cate, seed
+        )
         if os.path.exists(filename):
             with open(filename, "rb") as f:
                 dic = pkl.load(f)
@@ -37,7 +39,9 @@ class Loop:
             if "welfare" in dic:
                 self.welfare = dic["welfare"]
             else:
-                delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(self.weights, self.mu)
+                delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(
+                    self.weights, self.mu
+                )
                 dic["welfare"] = self.welfare
                 with open(filename, "wb") as f:
                     pkl.dump(dic, f)
@@ -68,9 +72,16 @@ class Loop:
 
                 print(self.weights)
 
-                delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(self.weights, self.mu)
+                delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(
+                    self.weights, self.mu
+                )
                 print("delta:", delta_pne, delta_nopne, self.delta)
-                if delta_pne < 500 and ((self.N <= 4 and self.delta > 0.03) or (self.N == 5 and self.delta > 0.01) or (self.N > 5 and self.delta > 1e-4) or (self.N < self.K and cate == "rewardsame")):
+                if delta_pne < 500 and (
+                    (self.N <= 4 and self.delta > 0.03)
+                    or (self.N == 5 and self.delta > 0.01)
+                    or (self.N > 5 and self.delta > 1e-4)
+                    or (self.N < self.K and cate == "rewardsame")
+                ):
                     break
             dic = {}
             dic["weights"] = self.weights
@@ -118,6 +129,8 @@ class Loop:
         regrets = np.maximum(0, reward_best_deviation - personal_expected_rewards)
 
         regrets = np.array(regrets)
-        is_pne = (np.sum(regrets) <= 1e-6) and (np.sum(personal_expected_rewards) >= self.welfare - 1e-6)
+        is_pne = (np.sum(regrets) <= 1e-6) and (
+            np.sum(personal_expected_rewards) >= self.welfare - 1e-6
+        )
         self.tmp_personal_expected_rewards = np.sum(personal_expected_rewards)
         return arm_rewards, personal_rewards, is_pne, regrets

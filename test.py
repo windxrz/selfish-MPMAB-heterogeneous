@@ -1,5 +1,6 @@
 from model.data import Loop
 
+
 def generate_data():
     Ns = [2, 4]
     K = 3
@@ -11,6 +12,7 @@ def generate_data():
             for cate in cates:
                 for seed in range(50):
                     loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed)
+
 
 if __name__ == "__main__":
     # loop = Loop(3, 2, 10, cate="same")

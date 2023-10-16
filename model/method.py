@@ -162,8 +162,77 @@ class TotalReward:
         self.count[k] += 1
 
 
+class SelfishRobustMMAB:
+    def __init__(self, N, K, T, rank, loop, beta, seed=0):
+        set_seed(seed)
+        self.N = N
+        self.K = K
+        self.T = T
+        self.rank = rank
+        self.rewards = np.zeros(self.K)
+        self.count = np.zeros(self.K)
+        self.beta = beta
+        self.pull_list = []
+        self.loop = loop
+
+        self.coin = np.random.rand(T) > 0.5
+        self.coin_count = 0
+
+        self.KK = int(np.ceil(self.K / self.N)) * self.N
+
+    def pull(self, t):
+        if t < self.K:
+            k = t
+        elif t < self.KK:
+            k = np.random.randint(0, self.K)
+        else:
+            if t % self.N == 0:
+                mu = self.rewards / self.count
+                idx = np.argsort(mu)[::-1]
+                z = mu[idx[self.N - 1]]
+
+                self.candidate = []
+                tmp = self.count * kl_divergence(mu, z)
+                target = self.beta * (np.log(t + 1) + 4 * np.log(np.log(t + 1)))
+                for i in range(self.K):
+                    if mu[i] < z and tmp[i] <= target:
+                        self.candidate.append(i)
+
+                self.pne_list = idx[: self.N]
+                self.explore_idx = self.N - 1
+
+            idx = (self.rank + t) % self.N
+            k = self.pne_list[idx]
+            if idx == self.explore_idx and len(self.candidate) > 0:
+                if self.coin[self.coin_count]:
+                    k = np.random.choice(self.candidate)
+                self.coin_count += 1
+        self.pull_list.append(k)
+        return k
+
+    def update(self, arm_reward, personal_reward, choices):
+        k = self.pull_list[-1]
+        self.rewards[k] += arm_reward
+        self.count[k] += 1
+
+
 class Ours:
-    def __init__(self, N, K, T, rank, loop, c1, c2, c3, eta, epsilon, seed=0, debug=False, no_gamma=False):
+    def __init__(
+        self,
+        N,
+        K,
+        T,
+        rank,
+        loop,
+        c1,
+        c2,
+        c3,
+        eta,
+        epsilon,
+        seed=0,
+        debug=False,
+        no_gamma=False,
+    ):
         set_seed(seed)
         self.N = N
         self.K = K
@@ -176,13 +245,16 @@ class Ours:
 
         if loop.delta > 1e-6:
             self.gamma = c1 * loop.delta / 4 / self.N
-            self.c1 = min(np.ceil(c1 * np.log(T) * K * K / loop.delta / loop.delta), self.T / 10 / K)
+            self.c1 = min(
+                np.ceil(c1 * np.log(T) * K * K / loop.delta / loop.delta),
+                self.T / 10 / K,
+            )
             self.gammas = np.random.normal(0, self.gamma, K)
         else:
             self.c1 = np.ceil(c1 * np.log(T) * K * K)
             self.gamma = 0
             self.gammas = np.zeros(K)
-        
+
         if no_gamma:
             self.gamma = 0
             self.gammas = np.zeros(K)
@@ -208,14 +280,17 @@ class Ours:
         self.count_best = np.zeros(self.K)
 
         self.threshold = 1e-5
-    
-        self.probabilities = np.random.rand(self.T * 10)
+
+        self.probabilities = np.random.rand(self.T // 2)
         self.prob_idx = 0
 
         self.debug = debug
 
     def next_prob(self):
         self.prob_idx += 1
+        if self.prob_idx == len(self.probabilities) + 1:
+            self.probabilities = np.random.rand(self.T // 2)
+            self.prob_idx = 1
         return self.probabilities[self.prob_idx - 1]
 
     def F(self, u):
@@ -331,57 +406,3 @@ class Ours:
                 self.count_best[k] += 1
             # if self.rank == 0:
             #     print(self.mood, self.action, self.utility)
-
-
-class SelfishRobustMMAB:
-    def __init__(self, N, K, T, rank, loop, beta, seed=0):
-        set_seed(seed)
-        self.N = N
-        self.K = K
-        self.T = T
-        self.rank = rank
-        self.rewards = np.zeros(self.K)
-        self.count = np.zeros(self.K)
-        self.beta = beta
-        self.pull_list = []
-        self.loop = loop
-
-        self.coin = np.random.rand(T) > 0.5
-        self.coin_count = 0
-
-        self.KK = int(np.ceil(self.K / self.N)) * self.N
-
-    def pull(self, t):
-        if t < self.K:
-            k = t
-        elif t < self.KK:
-            k = np.random.randint(0, self.K)
-        else:
-            if t % self.N == 0:
-                mu = self.rewards / self.count
-                idx = np.argsort(mu)[::-1]
-                z = mu[idx[self.N - 1]]
-
-                self.candidate = []
-                tmp = self.count * kl_divergence(mu, z)
-                target = self.beta * (np.log(t + 1) + 4 * np.log(np.log(t + 1)))
-                for i in range(self.K):
-                    if mu[i] < z and tmp[i] <= target:
-                        self.candidate.append(i)
-
-                self.pne_list = idx[: self.N]
-                self.explore_idx = self.N - 1
-
-            idx = (self.rank + t) % self.N
-            k = self.pne_list[idx]
-            if idx == self.explore_idx and len(self.candidate) > 0:
-                if self.coin[self.coin_count]:
-                    k = np.random.choice(self.candidate)
-                self.coin_count += 1
-        self.pull_list.append(k)
-        return k
-
-    def update(self, arm_reward, personal_reward, choices):
-        k = self.pull_list[-1]
-        self.rewards[k] += arm_reward
-        self.count[k] += 1

@@ -139,9 +139,7 @@ def find_pne_2(weights, rewards, isprint=False):
         weight_choices = np.tile(weight_choices.reshape(N, 1), [1, K])
         weight = weight + weight_choices
         reward_deviation = (
-            np.tile(rewards.reshape(-1, K), [N, 1])
-            / (weight + 1e-6)
-            * weight_choices
+            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + 1e-6) * weight_choices
         )
 
         for i, choice in enumerate(strategy):
@@ -179,12 +177,20 @@ def find_pne_2(weights, rewards, isprint=False):
 
     return best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne, best_payoff
 
+
 def calculate_delta(weights, rewards, isprint=False):
-    best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne, best_payoff = find_pne_2(
-        weights, rewards, isprint
-    )
+    (
+        best_pne,
+        best_delta_1,
+        best_nopne,
+        best_delta_2,
+        multiple_pne,
+        best_payoff,
+    ) = find_pne_2(weights, rewards, isprint)
     if isprint:
-        print(best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne, best_payoff)
+        print(
+            best_pne, best_delta_1, best_nopne, best_delta_2, multiple_pne, best_payoff
+        )
 
     delta = min(best_delta_1, best_delta_2)
     return best_delta_1, best_delta_2, delta, best_payoff

@@ -1,9 +1,10 @@
-import numpy as np
-from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import Pool
 from itertools import product
+from multiprocessing import Pool
+
+import numpy as np
 from joblib import Parallel, delayed
+from tqdm import tqdm
 
 
 def best_response_dynamics(N, K, mu, weights, threshold=1000):
@@ -107,9 +108,11 @@ def count_PNE_ratio():
         if trial % 100 == 0:
             print(non_exist, trial, non_exist / trial)
 
+
 def generate_matrix(N, K):
     possible_values = np.linspace(0, 1, 11)
-    return [np.array(p).reshape(N, K) for p in product(possible_values, repeat=N*K)]
+    return [np.array(p).reshape(N, K) for p in product(possible_values, repeat=N * K)]
+
 
 def count_PNE_ratio_NK(N, K):
     weights = generate_matrix(N, K)
@@ -124,7 +127,6 @@ def count_PNE_ratio_NK(N, K):
                 non_exist += 1
                 print(N, K, mu, weight)
     print(N, K, trial, non_exist)
-
 
 
 def main():
@@ -206,6 +208,7 @@ def main():
     # print(N, K, mu, weights)
 
     count_PNE_ratio_NK(3, 2)
+
 
 if __name__ == "__main__":
     main()

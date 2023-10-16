@@ -7,12 +7,7 @@ import numpy as np
 from tqdm import tqdm
 
 from model.data import Loop
-from model.method import (
-    SMAA,
-    TotalReward,
-    SelfishRobustMMAB,
-    Ours,
-)
+from model.method import SMAA, Ours, SelfishRobustMMAB, TotalReward
 from utils.delta import calculate_delta
 
 
@@ -90,7 +85,13 @@ def main():
         )
     elif method == "Ours":
         method_name = "{}{}_c1_{}_c2_{}_c3_{}_eta_{}_epsilon_{}".format(
-            method, "nogamma" if args.no_gamma else "", args.c1, args.c2, args.c3, args.eta, args.epsilon
+            method,
+            "nogamma" if args.no_gamma else "",
+            args.c1,
+            args.c2,
+            args.c3,
+            args.eta,
+            args.epsilon,
         )
     elif method == "SelfishRobustMMAB":
         method_name = "{}_beta_{}".format(method, args.beta)
@@ -109,7 +110,7 @@ def main():
     for seed_data in range(0, total_runs):
         if args.debug and seed_data != 0:
             continue
-            
+
         print("Running {}/{}".format(seed_data + 1, total_runs))
 
         res_file = os.path.join(res_path_base, "{}.pkl".format(seed_data))
@@ -179,7 +180,14 @@ def main():
                     players[i].update(arm_rewards[i], personal_rewards[i], choices)
 
                 if args.debug:
-                    print("out:", choices, regrets, is_pne, loop.tmp_personal_expected_rewards, loop.welfare)
+                    print(
+                        "out:",
+                        choices,
+                        regrets,
+                        is_pne,
+                        loop.tmp_personal_expected_rewards,
+                        loop.welfare,
+                    )
                 if args.method == "Ours" and args.debug:
                     choices_new = []
                     for i in range(N):
@@ -188,8 +196,24 @@ def main():
                     # tmp = choices[0] * 4 + choices[1] * 2 + choices[2]
                     # if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
                     #     count_tmp[tmp] += 1
-                    print([(player.mood, player.action, round(player.utility, 2), round(player.last_utility, 2)) for player in players], choices, is_pne, loop.mu.round(2))
-                    print("counting best: ", [player.count_best.argmax() for player in players])
+                    print(
+                        [
+                            (
+                                player.mood,
+                                player.action,
+                                round(player.utility, 2),
+                                round(player.last_utility, 2),
+                            )
+                            for player in players
+                        ],
+                        choices,
+                        is_pne,
+                        loop.mu.round(2),
+                    )
+                    print(
+                        "counting best: ",
+                        [player.count_best.argmax() for player in players],
+                    )
                     # if choices == [3, 0, 1, 2]:
                     #     exit()
                     # exit()
