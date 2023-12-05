@@ -76,8 +76,16 @@ class Loop:
                     self.weights, self.mu
                 )
                 print("delta:", delta_pne, delta_nopne, self.delta)
-                if delta_pne < 500 and (
-                    (self.N <= 4 and self.delta > 0.03)
+                if delta_pne >= 500:
+                    continue
+                if self.K == 2:
+                    if self.N == 5 and self.delta > 3e-2:
+                        break
+                    if self.N == 10 and self.delta > 5e-3:
+                        break
+                elif (
+                    self.N <= 4
+                    and self.delta > 0.03
                     or (self.N == 5 and self.delta > 0.01)
                     or (self.N > 5 and self.delta > 1e-4)
                     or (self.N < self.K and cate == "rewardsame")
