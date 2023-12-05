@@ -264,14 +264,12 @@ class Ours:
         self.c3 = c3
         self.eta = eta
         self.epsilon = epsilon
+        self.log_epsilon = np.log(epsilon)
 
         self.mood = "discontent"
         self.action = 0
         self.utility = 0
         self.last_utility = 0
-
-        self.rewards = np.zeros(self.K)
-        self.count = np.zeros(self.K)
 
         self.remaining = 0
         self.round = 0
@@ -281,17 +279,17 @@ class Ours:
 
         self.threshold = 1e-5
 
-        self.probabilities = np.random.rand(self.T // 2)
+        self.log_probabilities = np.log(np.random.rand(self.T // 2))
         self.prob_idx = 0
 
         self.debug = debug
 
-    def next_prob(self):
+    def next_log_prob(self):
         self.prob_idx += 1
-        if self.prob_idx == len(self.probabilities) + 1:
-            self.probabilities = np.random.rand(self.T // 2)
+        if self.prob_idx == len(self.log_probabilities) + 1:
+            self.log_probabilities = np.log(np.random.rand(self.T // 2))
             self.prob_idx = 1
-        return self.probabilities[self.prob_idx - 1]
+        return self.log_probabilities[self.prob_idx - 1]
 
     def F(self, u):
         return -u / (self.N * (4 + 3 * self.gamma)) + 1 / 3 / self.N
@@ -335,8 +333,8 @@ class Ours:
                 if self.mood == "discontent":
                     k = np.random.randint(0, self.K)
                 elif self.mood == "content":
-                    p = self.next_prob()
-                    if p >= self.epsilon:
+                    log_p = self.next_log_prob()
+                    if log_p >= self.log_epsilon:
                         k = self.action
                     else:
                         k = np.random.randint(0, self.K - 1)
@@ -364,9 +362,9 @@ class Ours:
                     personal_reward / (arm_reward) * self.mu_hat[k] + self.gammas[k]
                 )
             self.last_utility = utility
-            p = self.next_prob()
+            log_p = self.next_log_prob()
             if self.mood == "discontent":
-                if p <= np.power(self.epsilon, self.F(utility)):
+                if log_p <= self.F(utility) * self.log_epsilon:
                     self.mood = "content"
                     self.action = k
                     self.utility = utility
@@ -379,9 +377,10 @@ class Ours:
                     else:
                         self.mood = "watchful"
                 else:
-                    p = self.next_prob()
-                    if utility >= self.utility + self.threshold and p <= np.power(
-                        self.epsilon, self.G(utility - self.utility)
+                    log_p = self.next_log_prob()
+                    if (
+                        utility >= self.utility + self.threshold
+                        and log_p <= self.G(utility - self.utility) * self.log_epsilon
                     ):
                         self.mood = "content"
                         self.action = k

@@ -39,7 +39,7 @@ search_space:
 trial_command: python main.py --nni --method Ours -T 100000000 
 trial_code_directory: ..
 
-trial_concurrency: 18
+trial_concurrency: 12
 max_trial_number: 216
 
 tuner:
