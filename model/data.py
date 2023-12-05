@@ -81,7 +81,12 @@ class Loop:
                 if self.K == 2:
                     if self.N == 5 and self.delta > 3e-2:
                         break
-                    if self.N == 10 and self.delta > 5e-3:
+                    if self.N == 10 and self.delta > 1e-2:
+                        break
+                elif self.N == 2:
+                    if self.K == 5 and self.delta > 3e-2:
+                        break
+                    if self.K == 10 and self.delta > 3e-2:
                         break
                 elif (
                     self.N <= 4
