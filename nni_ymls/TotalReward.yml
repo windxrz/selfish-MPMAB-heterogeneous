@@ -1,11 +1,11 @@
 search_space:
   N:
     _type: choice
-    _value: [ 2 ]
+    _value: [ 10 ]
   
-  N:
+  K:
     _type: choice
-    _value: [ 5 ]
+    _value: [ 2 ]
 
   dis:
     _type: choice
@@ -23,7 +23,7 @@ search_space:
 trial_command: python main.py --nni --method TotalReward -T 3000000
 trial_code_directory: ..
 
-trial_concurrency: 5
+trial_concurrency: 10
 max_trial_number: 10
 
 tuner:
