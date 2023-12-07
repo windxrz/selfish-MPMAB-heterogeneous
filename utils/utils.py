@@ -94,19 +94,31 @@ def dfs(i, res, N, K, mu, weights):
     return False
 
 
-def count_PNE_ratio():
+def count_PNE_ratio(dis):
     trial = 0
     non_exist = 0
     while True:
         K = np.random.randint(10, 100)
         N = np.random.randint(10, 100)
-        mu = np.random.uniform(0, 1, K)
-        weights = np.random.uniform(0, 1, (N, K))
+        if dis == "uniform":
+            mu = np.random.uniform(0, 1, K)
+            weights = np.random.uniform(0, 1, (N, K))
+        elif dis == "gaussian":
+            mu = np.random.normal(0.5, 0.1, K)
+            weights = np.random.uniform(0, 1, (N, K))
+        elif dis == "t-distribution":
+            mu = np.random.standard_t(5, K) + 0.5
+            weights = np.random.standard_t(5, (N, K)) + 0.5
+        elif dis == "beta":
+            mu = np.random.beta(0.5, 0.5, K)
+            weights = np.random.beta(0.5, 0.5, (N, K))
+        mu = mu.clip(0, 1)
+        weights = weights.clip(0, 1)
         trial += 1
         if not best_best_response_dynamics(N, K, mu, weights):
             non_exist += 1
         if trial % 100 == 0:
-            print(non_exist, trial, non_exist / trial)
+            print("dis = {}".format(dis), non_exist, trial, non_exist / trial)
 
 
 def generate_matrix(N, K):
@@ -207,7 +219,10 @@ def main():
     # count_PNE_ratio()
     # print(N, K, mu, weights)
 
-    count_PNE_ratio_NK(3, 2)
+    # count_PNE_ratio_NK(3, 2)
+    # count_PNE_ratio("gaussian")
+    # count_PNE_ratio("t-distribution")
+    count_PNE_ratio("beta")
 
 
 if __name__ == "__main__":
