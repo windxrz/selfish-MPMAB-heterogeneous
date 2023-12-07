@@ -14,6 +14,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
+THRESHOLD = 0.9
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -62,47 +63,59 @@ def setting_path(N, K, T, dis, cate):
 def analyze_method_run(setting, method):
     res_path = os.path.join("results", setting, method)
 
-    final = {"personal_rewards": None, "is_pne": None, "regrets": None}
-    count = 0
-    for filename in sorted(os.listdir(res_path)):
-        with open(os.path.join(res_path, filename), "rb") as f:
-            res = pkl.loads(f.read())
+    if os.path.exists(os.path.join(res_path, "res_{}.pkl".format(COUNT))):
+        with open(os.path.join(res_path, "res_{}.pkl".format(COUNT)), "rb") as f:
+            final = pkl.loads(f.read())
             f.close()
-        count += 1
-        if final["personal_rewards"] is None:
-            final["personal_rewards"] = res["personal_rewards"][np.newaxis, :]
-            final["is_pne"] = res["is_pne"][np.newaxis, :]
-            final["regrets"] = res["regrets"][np.newaxis, :]
-        else:
-            final["personal_rewards"] = np.concatenate(
-                [final["personal_rewards"], res["personal_rewards"][np.newaxis, :]],
-                axis=0,
-            )
-            final["is_pne"] = np.concatenate(
-                [final["is_pne"], res["is_pne"][np.newaxis, :]],
-                axis=0,
-            )
-            final["regrets"] = np.concatenate(
-                [final["regrets"], res["regrets"][np.newaxis, :]],
-                axis=0,
-            )
-        if count == COUNT:
-            break
+        return COUNT, final
+    else:
+        final = {"personal_rewards": None, "is_pne": None, "regrets": None}
+        count = 0
+        if len(os.listdir(res_path)) < COUNT * THRESHOLD:
+            return 0, None
+        for filename in sorted(os.listdir(res_path)):
+            with open(os.path.join(res_path, filename), "rb") as f:
+                res = pkl.loads(f.read())
+                f.close()
+            count += 1
+            if final["personal_rewards"] is None:
+                final["personal_rewards"] = res["personal_rewards"][np.newaxis, :]
+                final["is_pne"] = res["is_pne"][np.newaxis, :]
+                final["regrets"] = res["regrets"][np.newaxis, :]
+            else:
+                final["personal_rewards"] = np.concatenate(
+                    [final["personal_rewards"], res["personal_rewards"][np.newaxis, :]],
+                    axis=0,
+                )
+                final["is_pne"] = np.concatenate(
+                    [final["is_pne"], res["is_pne"][np.newaxis, :]],
+                    axis=0,
+                )
+                final["regrets"] = np.concatenate(
+                    [final["regrets"], res["regrets"][np.newaxis, :]],
+                    axis=0,
+                )
+            if count == COUNT:
+                break
 
-    if count == 0:
-        return 0, None
+        if count == 0:
+            return 0, None
 
-    final["regrets"] = np.mean(final["regrets"], axis=2)
+        final["regrets"] = np.mean(final["regrets"], axis=2)
 
-    final["regrets_std"] = np.std(final["regrets"], axis=0)
-    final["is_pne_std"] = np.std(final["is_pne"], axis=0)
+        final["regrets_std"] = np.std(final["regrets"], axis=0)
+        final["is_pne_std"] = np.std(final["is_pne"], axis=0)
 
-    final["regrets"] = np.mean(final["regrets"], axis=0)
-    final["is_pne"] = np.mean(final["is_pne"], axis=0)
+        final["regrets"] = np.mean(final["regrets"], axis=0)
+        final["is_pne"] = np.mean(final["is_pne"], axis=0)
 
-    # print(setting, method, count, final["is_pne"][-1], final["regrets"][-1])
+        with open(os.path.join(res_path, "res_{}.pkl".format(COUNT)), "wb") as f:
+            f.write(pkl.dumps(final))
+            f.close()
 
-    return count, final
+        # print(setting, method, count, final["is_pne"][-1], final["regrets"][-1])
+
+        return count, final
 
 
 def analyze_method(setting, method):
@@ -114,7 +127,7 @@ def analyze_method(setting, method):
         if method + "_" not in run:
             continue
         count, res = analyze_method_run(setting, run)
-        if count < COUNT:
+        if count < COUNT * THRESHOLD:
             continue
         # if res["is_pne"][-1] > is_pne_max:
         #     is_pne_max = res["is_pne"][-1]
@@ -131,8 +144,10 @@ def analyze_method(setting, method):
             method,
             "best",
             run_setting,
-            final["is_pne"][-1],
-            final["regrets"][-1],
+            int(round(final["is_pne"][-1], 0)),
+            int(round(final["is_pne_std"][-1], 0)),
+            int(round(final["regrets"][-1], 0)),
+            int(round(final["regrets_std"][-1], 0)),
         )
     return final
 
@@ -168,6 +183,13 @@ def plot_part(N, K, T, dis, cate, ax1, ax2):
             markerfacecolor="None",
             markeredgewidth=MARKEREDGEWIDTH,
         )
+        ax1.fill_between(
+            range(1, T + 1, step),
+            res["regrets"] - res["regrets_std"],
+            res["regrets"] + res["regrets_std"],
+            color=COLOR[method_name],
+            alpha=0.1,
+        )
 
         ax2.plot(
             range(1, T + 1, step),
@@ -181,6 +203,13 @@ def plot_part(N, K, T, dis, cate, ax1, ax2):
             markerfacecolor="None",
             markeredgewidth=MARKEREDGEWIDTH,
         )
+        ax2.fill_between(
+            range(1, T + 1, step),
+            (np.arange(1, T + 1, step) - res["is_pne"]) - res["is_pne_std"],
+            (np.arange(1, T + 1, step) - res["is_pne"]) + res["is_pne_std"],
+            color=COLOR[method_name],
+            alpha=0.1,
+        )
 
         ax1.ticklabel_format(style="sci", scilimits=(-3, 3), axis="both")
         ax2.ticklabel_format(style="sci", scilimits=(-3, 3), axis="both")
@@ -191,8 +220,9 @@ def plot_part(N, K, T, dis, cate, ax1, ax2):
         ax2.tick_params(axis="both", which="major", labelsize=TICKFONTSIZE)
 
         ax2.set_title(
-            "{}, {}".format(
-                "$N < K$" if N < K else "$N \ge K$",
+            "N={}, K={}, {}".format(
+                N,
+                K,
                 "Equal weights" if cate == "same" else "Different weights",
             ),
             size=FONTSIZE,
@@ -233,10 +263,40 @@ def plot_all():
     plt.savefig("figs/all.pdf", bbox_inches="tight")
 
 
+def plot_rebuttal():
+    plt.clf()
+    fig, axes = plt.subplots(2, 2, figsize=(9, 6.5))
+
+    dis = "beta"
+    T = 3000000
+    plot_part(2, 10, T, dis, "normal", axes[1][0], axes[0][0])
+    plot_part(10, 2, T, dis, "normal", axes[1][1], axes[0][1])
+    # axes[1][2].set_ylim(-5e3, 55e3)
+    # axes[1][3].set_ylim(-5e3, 55e3)
+    # plot_part(5, 4, T, dis, "normal", axes[0][4], axes[1][4])
+    # plot_part(5, 4, T, dis, "same", axes[0][5], axes[1][5])
+
+    axes[1][0].set_ylabel("Average Regret", size=FONTSIZE)
+    axes[0][0].set_ylabel("\# of Non-PNE Rounds", size=FONTSIZE)
+
+    lines, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(
+        lines,
+        labels,
+        prop={"size": LEGEND_FONSIZE},
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.1),
+        ncol=5,
+    )
+    plt.tight_layout()
+    plt.savefig("figs/all.png", bbox_inches="tight")
+    plt.savefig("figs/all.pdf", bbox_inches="tight")
+
+
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    plot_all()
+    plot_rebuttal()
 
 
 if __name__ == "__main__":

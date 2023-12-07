@@ -4,12 +4,8 @@ import random
 
 import numpy as np
 
-from utils.delta import calculate_delta
-
-
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
+from utils.delta import calculate_delta, calculate_SMAA
+from utils.utils import set_seed
 
 
 class Loop:
@@ -65,28 +61,22 @@ class Loop:
                     self.alpha = np.tile(np.random.rand() * 5, K)
                     self.beta = np.tile(np.random.rand() * 5, K)
                     self.mu = self.alpha / (self.alpha + self.beta)
-                    print("mu", self.mu)
-                    print("weights", self.weights)
                 elif cate == "smaa":
                     self.weights = np.ones((self.N, self.K))
-
-                print(self.weights)
 
                 delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(
                     self.weights, self.mu
                 )
-                print("delta:", delta_pne, delta_nopne, self.delta)
+                # print("delta:", delta_pne, delta_nopne, self.delta)
+                # if smaa < 0.5:
+                #     continue
                 if delta_pne >= 500:
                     continue
                 if self.K == 2:
-                    if self.N == 5 and self.delta > 3e-2:
-                        break
-                    if self.N == 10 and self.delta > 1e-2:
+                    if self.N == 10 and self.delta > 1e-3:
                         break
                 elif self.N == 2:
-                    if self.K == 5 and self.delta > 3e-2:
-                        break
-                    if self.K == 10 and self.delta > 3e-2:
+                    if self.K == 10 and self.delta > 1e-3:
                         break
                 elif (
                     self.N <= 4
@@ -96,6 +86,10 @@ class Loop:
                     or (self.N < self.K and cate == "rewardsame")
                 ):
                     break
+
+            smaa = calculate_SMAA(self.weights, self.mu)
+            print("smaa:", smaa)
+
             dic = {}
             dic["weights"] = self.weights
             dic["mu"] = self.mu
@@ -108,7 +102,7 @@ class Loop:
                 pkl.dump(dic, f)
 
         if self.dis == "beta":
-            self.rewards = np.random.beta(self.alpha, self.beta, (T, K))
+            self.rewards = np.random.beta(self.alpha * 10, self.beta * 10, (T, K))
         elif self.dis == "bernoulli":
             self.rewards = np.random.binomial(1, self.mu, (T, K))
 

@@ -1,3 +1,4 @@
+import random
 from concurrent.futures import ThreadPoolExecutor
 from itertools import product
 from multiprocessing import Pool
@@ -5,6 +6,11 @@ from multiprocessing import Pool
 import numpy as np
 from joblib import Parallel, delayed
 from tqdm import tqdm
+
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
 
 
 def best_response_dynamics(N, K, mu, weights, threshold=1000):

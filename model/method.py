@@ -1,6 +1,6 @@
 import numpy as np
 
-from model.data import set_seed
+from utils.utils import set_seed
 
 
 def calculate_PNE(mu, N):

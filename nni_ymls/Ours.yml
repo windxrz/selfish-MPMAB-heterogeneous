@@ -13,7 +13,7 @@ search_space:
 
   cate:
     _type: choice
-    _value: [ "same", "normal" ]
+    _value: [ "normal" ]
   
   c1:
     _type: choice
@@ -39,8 +39,8 @@ search_space:
 trial_command: python main.py --nni --method Ours -T 3000000 
 trial_code_directory: ..
 
-trial_concurrency: 40
-max_trial_number: 432
+trial_concurrency: 54
+max_trial_number: 108
 
 tuner:
   name: TPE

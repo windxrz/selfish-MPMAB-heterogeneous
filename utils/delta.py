@@ -4,6 +4,8 @@ from itertools import product
 import numpy as np
 from tqdm import tqdm
 
+from model.method import calculate_PNE
+
 
 def calculate_payoff(weights, rewards, strategy):
     """
@@ -194,6 +196,53 @@ def calculate_delta(weights, rewards, isprint=False):
 
     delta = min(best_delta_1, best_delta_2)
     return best_delta_1, best_delta_2, delta, best_payoff
+
+
+def calculate_SMAA(weights, rewards, isprint=False):
+    N, K = weights.shape
+    smaa, _, _ = calculate_PNE(rewards, N)
+    count = 0
+    for z in range(N):
+        j = z
+        strategy = [0] * N
+        for i in range(K):
+            t = smaa[i]
+            while t > 0:
+                t -= 1
+                strategy[j] = i
+                j = (j + 1) % N
+
+        weight = np.zeros(K)
+        weight_choices = []
+        for i, choice in enumerate(strategy):
+            weight[choice] += weights[i][choice]
+            weight_choices.append(weights[i][choice])
+
+        weight_choices = np.array(weight_choices)
+
+        personal_expected_rewards = (rewards / (weight + 1e-6))[strategy]
+        personal_expected_rewards = personal_expected_rewards * weight_choices
+
+        weight = np.tile(weight, N).reshape(N, -1)
+        for i, choice in enumerate(strategy):
+            weight[i][choice] -= weights[i][choice]
+
+        weight_choices = np.tile(weight_choices.reshape(N, 1), [1, K])
+        weight = weight + weight_choices
+        reward_deviation = (
+            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + 1e-6) * weight_choices
+        )
+
+        for i, choice in enumerate(strategy):
+            reward_deviation[i][choice] = -1e6
+
+        reward_best_deviation = np.max(reward_deviation, axis=1)
+        delta_rewards = reward_best_deviation - personal_expected_rewards
+        if np.max(delta_rewards) > 1e-6:
+            count += 1
+
+    ans = count / N
+    return ans
 
 
 if __name__ == "__main__":
