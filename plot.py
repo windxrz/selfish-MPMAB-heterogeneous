@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.01
+THRESHOLD = 0.2
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -132,6 +132,7 @@ def analyze_method(setting, method):
     regret_min = 1e9
     final = None
     run_setting = ""
+    count_final = 0
     for run in sorted(os.listdir(os.path.join("results", setting))):
         if method + "_" not in run:
             continue
@@ -143,6 +144,7 @@ def analyze_method(setting, method):
         #     final = res.copy()
         #     run_setting = run
         if res["regrets"][-1] < regret_min:
+            count_final = count
             regret_min = res["regrets"][-1]
             final = res.copy()
             run_setting = run
@@ -151,7 +153,7 @@ def analyze_method(setting, method):
         print(
             setting,
             method,
-            count,
+            count_final,
             run_setting,
             int(round(final["is_pne"][-1], 0)),
             int(round(final["is_pne_std"][-1], 0)),
@@ -366,9 +368,9 @@ def plot_original_std():
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    # plot_all()
+    plot_all()
     # plot_rebuttal()
-    plot_original_std()
+    # plot_original_std()
 
 
 if __name__ == "__main__":
