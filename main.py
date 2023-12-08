@@ -100,7 +100,14 @@ def main():
 
     res_path_base = os.path.join(
         "results",
-        "N_{}_K_{}_T_{}_dis_{}_cate_{}{}".format(N, K, T, dis, cate, "" if args.seed_reward == 0 else "_seedreward_{}".format(args.seed_reward)),
+        "N_{}_K_{}_T_{}_dis_{}_cate_{}{}".format(
+            N,
+            K,
+            T,
+            dis,
+            cate,
+            "" if args.seed_reward == 0 else "_seedreward_{}".format(args.seed_reward),
+        ),
         method_name,
     )
     if not os.path.exists(res_path_base):
@@ -125,9 +132,25 @@ def main():
 
         if (not os.path.exists(res_file)) or args.debug:
             if args.debug:
-                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data, seed_reward=args.seed_reward)
+                loop = Loop(
+                    N,
+                    K,
+                    T,
+                    dis=dis,
+                    cate=cate,
+                    seed=seed_data,
+                    seed_reward=args.seed_reward,
+                )
             else:
-                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data, seed_reward=args.seed_reward)
+                loop = Loop(
+                    N,
+                    K,
+                    T,
+                    dis=dis,
+                    cate=cate,
+                    seed=seed_data,
+                    seed_reward=args.seed_reward,
+                )
             print(loop.mu)
             print(loop.delta)
             print(loop.weights)
@@ -193,7 +216,10 @@ def main():
                 if args.method == "Ours" and args.debug:
                     flag = False
                     for i in range(args.N):
-                        if players[i].mood != last_mood[i] or players[i].action != last_choice[i]:
+                        if (
+                            players[i].mood != last_mood[i]
+                            or players[i].action != last_choice[i]
+                        ):
                             flag = True
                             break
                     if flag:
@@ -220,9 +246,7 @@ def main():
                             ],
                         )
                         print([player.true_utility.round(6) for player in players])
-                        print( is_pne,
-                            regrets.round(6).tolist(),
-                            loop.mu.round(6))
+                        print(is_pne, regrets.round(6).tolist(), loop.mu.round(6))
                         print(
                             "counting best: ",
                             [player.count_best.argmax() for player in players],

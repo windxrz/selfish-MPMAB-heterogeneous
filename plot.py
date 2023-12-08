@@ -3,6 +3,7 @@ import pickle as pkl
 
 import matplotlib
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib import rc
 
@@ -153,14 +154,21 @@ def analyze_method(setting, method):
     return final
 
 
-def plot_part(N, K, T, dis, cate, ax1, ax2):
+def plot_part(N, K, T, dis, cate, ax1, ax2, table_std=False):
     setting_name = setting_path(N, K, T, dis, cate)
 
     step = 100
 
+    step_table = 5
+
     print(setting_name)
     if not os.path.exists(os.path.join("results", setting_name)):
         return
+
+    columns = np.arange(T // step_table, T + 1, T // step_table)
+    print(columns)
+    table_pne = {}
+    table_regrets = {}
 
     for method in COLOR.keys():
         if "Relaxed" in method:
@@ -231,6 +239,35 @@ def plot_part(N, K, T, dis, cate, ax1, ax2):
         )
         ax1.set_xlabel("Round", size=FONTSIZE)
 
+        pne = {
+            t: "{}{}".format(
+                int(res["is_pne"][(t - 1) // step]),
+                " ({})".format(int(res["is_pne_std"][(t - 1) // step]))
+                if table_std
+                else "",
+            )
+            for t in columns
+        }
+        regrets = {
+            t: "{}{}".format(
+                int(res["regrets"][(t - 1) // step]),
+                " ({})".format(int(res["regrets_std"][(t - 1) // step]))
+                if table_std
+                else "",
+            )
+            for t in columns
+        }
+
+        table_pne[method_name] = pne
+        table_regrets[method_name] = regrets
+
+    df_pne = pd.DataFrame.from_dict(table_pne, orient="index")
+    df_regrets = pd.DataFrame.from_dict(table_regrets, orient="index")
+    print("=" * 15 + " " + "is pne" + " " + "=" * 15)
+    print(df_pne.to_markdown())
+    print("=" * 15 + " " + "regrets" + " " + "=" * 15)
+    print(df_regrets.to_markdown())
+
 
 def plot_all():
     plt.clf()
@@ -294,11 +331,15 @@ def plot_rebuttal():
     plt.savefig("figs/all.pdf", bbox_inches="tight")
 
 
+def export_markdown_format():
+    pass
+
+
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    plot_all()
-    # plot_rebuttal()
+    # plot_all()
+    plot_rebuttal()
 
 
 if __name__ == "__main__":

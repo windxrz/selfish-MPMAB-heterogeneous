@@ -5,12 +5,11 @@ import random
 import numpy as np
 
 from utils.delta import calculate_delta, calculate_SMAA
-from utils.utils import set_seed
-from utils.utils import THRESHOLD, DENOMINATOR_DELTA
+from utils.utils import DENOMINATOR_DELTA, THRESHOLD, set_seed
 
 
 class Loop:
-    def __init__(self, N, K, T, dis="beta", cate="normal", seed=None, seed_reward=None):
+    def __init__(self, N, K, T, dis="beta", cate="normal", seed=None, seed_reward=0):
         set_seed(seed)
         self.N = N
         self.K = K
@@ -109,7 +108,6 @@ class Loop:
             self.rewards = np.random.beta(self.alpha, self.beta, (T, K))
         elif self.dis == "bernoulli":
             self.rewards = np.random.binomial(1, self.mu, (T, K))
-
 
     def pull(self, choices, t):
         weight = np.zeros(self.K)

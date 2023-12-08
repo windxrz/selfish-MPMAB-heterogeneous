@@ -19,14 +19,14 @@ def generate_data():
 
 
 def analyze_smaa():
-    N = 2
-    K = 10
+    N = 4
+    K = 4
     T = 3000000
     dis = "beta"
     cate = "normal"
     s = []
     for seed in range(50):
-        loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed)
+        loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed, seed_reward=0)
         tmp = calculate_SMAA(loop.weights, loop.mu, isprint=True)
         print(tmp)
         s.append(tmp)
@@ -36,7 +36,7 @@ def analyze_smaa():
 
 if __name__ == "__main__":
     # loop = Loop(3, 2, 10, cate="same")
-    generate_data()
+    # generate_data()
     analyze_smaa()
     # choices = [1, 0, 1]
     # t = 0

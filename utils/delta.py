@@ -143,7 +143,9 @@ def find_pne_2(weights, rewards, isprint=False):
         weight = weight + weights
 
         reward_deviation = (
-            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + DENOMINATOR_DELTA) * weights
+            np.tile(rewards.reshape(-1, K), [N, 1])
+            / (weight + DENOMINATOR_DELTA)
+            * weights
         )
 
         for i, choice in enumerate(strategy):
@@ -169,7 +171,12 @@ def find_pne_2(weights, rewards, isprint=False):
                 multiple_pne = True
             if isprint:
                 print("PNE", strategy, total_payoff, delta_1)
-                print(delta_rewards, reward_best_deviation, personal_expected_rewards, rewards)
+                print(
+                    delta_rewards,
+                    reward_best_deviation,
+                    personal_expected_rewards,
+                    rewards,
+                )
             if delta_1 <= best_delta_1:
                 best_pne = strategy
                 best_delta_1 = delta_1
@@ -233,7 +240,9 @@ def calculate_SMAA(weights, rewards, isprint=False):
         weight_choices = weights
         weight = weight + weight_choices
         reward_deviation = (
-            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + DENOMINATOR_DELTA) * weight_choices
+            np.tile(rewards.reshape(-1, K), [N, 1])
+            / (weight + DENOMINATOR_DELTA)
+            * weight_choices
         )
 
         for i, choice in enumerate(strategy):

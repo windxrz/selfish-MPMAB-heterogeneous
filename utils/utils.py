@@ -10,6 +10,7 @@ from tqdm import tqdm
 THRESHOLD = 1e-4
 DENOMINATOR_DELTA = 1e-6
 
+
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -75,7 +76,9 @@ def best_best_response_dynamics(N, K, mu, weights, threshold=1000, res=None):
             for i in range(N):
                 k = res[i]
                 reward.append(
-                    mu[k] * weights[i][k] / (np.sum(weights[:, k] * (res == k)) + DENOMINATOR_DELTA)
+                    mu[k]
+                    * weights[i][k]
+                    / (np.sum(weights[:, k] * (res == k)) + DENOMINATOR_DELTA)
                 )
             # print(N, K, res + 1, reward)
             return True
