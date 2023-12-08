@@ -13,9 +13,9 @@ from utils.delta import calculate_delta
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-N", type=int, default=4)
-    parser.add_argument("-K", type=int, default=4)
-    parser.add_argument("-T", type=int, default=1000000)
+    parser.add_argument("-N", type=int, default=10)
+    parser.add_argument("-K", type=int, default=2)
+    parser.add_argument("-T", type=int, default=3000000)
     parser.add_argument(
         "--dis", type=str, choices=["bernoulli", "beta"], default="beta"
     )
@@ -44,11 +44,11 @@ def parse_args():
     parser.add_argument("--tolerance", type=float, default=1e-6)
 
     # Ours
-    parser.add_argument("--c1", type=float, default=0.01)
-    parser.add_argument("--c2", type=float, default=1000)
+    parser.add_argument("--c1", type=float, default=0.0001)
+    parser.add_argument("--c2", type=float, default=100000000)
     parser.add_argument("--c3", type=float, default=100)
     parser.add_argument("--eta", type=float, default=0)
-    parser.add_argument("--epsilon", type=float, default=5e-3)
+    parser.add_argument("--epsilon", type=float, default=1e-2)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--no-gamma", action="store_true", default=False)
 
@@ -107,8 +107,12 @@ def main():
     total_runs = 50
     pne_nums = []
     regrets_sum = []
+    if args.debug:
+        last_mood = ["discontent"] * args.N
+        last_choice = [0] * args.N
+        last_utility = [0] * args.N
     for seed_data in range(0, total_runs):
-        if args.debug and seed_data != 0:
+        if args.debug and seed_data != 1:
             continue
 
         print("Running {}/{}".format(seed_data + 1, total_runs))
@@ -116,13 +120,18 @@ def main():
         res_file = os.path.join(res_path_base, "{}.pkl".format(seed_data))
         count_tmp = np.zeros(8)
 
-        if not os.path.exists(res_file) or args.method == "Ours":
-            loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data)
+        if (not os.path.exists(res_file)) or args.debug:
+            if args.debug:
+                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data)
+            else:
+                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data)
             print(loop.mu)
             print(loop.delta)
             print(loop.weights)
             if args.debug:
-                print(calculate_delta(loop.weights, loop.mu, isprint=True))
+                res_delta = calculate_delta(loop.weights, loop.mu, isprint=True)
+                print(res_delta)
+                exit()
             players = []
             for i in range(args.N):
                 if method == "TotalReward":
@@ -179,44 +188,51 @@ def main():
                 for i in range(N):
                     players[i].update(arm_rewards[i], personal_rewards[i], choices)
 
-                if args.debug:
-                    print(
-                        "out:",
-                        choices,
-                        regrets,
-                        is_pne,
-                        loop.tmp_personal_expected_rewards,
-                        loop.welfare,
-                    )
                 if args.method == "Ours" and args.debug:
-                    choices_new = []
-                    for i in range(N):
-                        choices_new.append(np.argmax(players[0].count_best))
-                    _, _, is_pne_new, regrets_new = loop.pull(choices_new, t)
-                    # tmp = choices[0] * 4 + choices[1] * 2 + choices[2]
-                    # if players[0].mood == "content" and players[1].mood == "content" and players[2].mood == "content":
-                    #     count_tmp[tmp] += 1
-                    print(
-                        [
-                            (
-                                player.mood,
-                                player.action,
-                                round(player.utility, 2),
-                                round(player.last_utility, 2),
-                            )
-                            for player in players
-                        ],
-                        choices,
-                        is_pne,
-                        loop.mu.round(2),
-                    )
-                    print(
-                        "counting best: ",
-                        [player.count_best.argmax() for player in players],
-                    )
+                    flag = False
+                    for i in range(args.N):
+                        if players[i].mood != last_mood[i] or players[i].action != last_choice[i]:
+                            flag = True
+                            break
+                    if flag:
+                        print("=" * 15 + "t={}".format(t) + "=" * 15)
+                        print(choices)
+                        print(
+                            [
+                                (
+                                    last_mood[i][0],
+                                    last_choice[i],
+                                    round(last_utility[i], 6),
+                                )
+                                for i in range(args.N)
+                            ],
+                        )
+                        print(
+                            [
+                                (
+                                    player.mood[0],
+                                    player.action,
+                                    round(player.utility, 6),
+                                )
+                                for player in players
+                            ],
+                        )
+                        print([player.true_utility.round(6) for player in players])
+                        print( is_pne,
+                            regrets.round(2).tolist(),
+                            loop.mu.round(2))
+                        print(
+                            "counting best: ",
+                            [player.count_best.argmax() for player in players],
+                        )
+                        print("delta:", res_delta)
                     # if choices == [3, 0, 1, 2]:
                     #     exit()
                     # exit()
+
+                    last_mood = [player.mood for player in players]
+                    last_choice = [player.action for player in players]
+                    last_utility = [player.utility for player in players]
 
             res_arm_rewards = np.concatenate(res_arm_rewards, axis=0)
 

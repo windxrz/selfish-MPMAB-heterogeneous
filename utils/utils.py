@@ -7,6 +7,8 @@ import numpy as np
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+THRESHOLD = 1e-4
+DENOMINATOR_DELTA = 1e-6
 
 def set_seed(seed):
     random.seed(seed)
@@ -22,9 +24,9 @@ def best_response_dynamics(N, K, mu, weights, threshold=1000):
         for i in range(N):
             k = res[i]
             w[k] -= weights[i][k]
-            r = mu * weights[i] / (w + weights[i] + 1e-6)
+            r = mu * weights[i] / (w + weights[i] + DENOMINATOR_DELTA)
             t = np.argmax(r)
-            if np.abs(r[t] - r[k]) < 1e-5:
+            if np.abs(r[t] - r[k]) < THRESHOLD:
                 w[k] += weights[i][k]
             else:
                 res[i] = t
@@ -59,9 +61,9 @@ def best_best_response_dynamics(N, K, mu, weights, threshold=1000, res=None):
         for i in range(N):
             k = res[i]
             w[k] -= weights[i][k]
-            r = mu * weights[i] / (w + weights[i] + 1e-9)
+            r = mu * weights[i] / (w + weights[i] + DENOMINATOR_DELTA)
             t = np.argmax(r)
-            if np.abs(r[t] - r[k]) >= 1e-5 and r[t] - r[k] > max_inc:
+            if np.abs(r[t] - r[k]) >= THRESHOLD and r[t] - r[k] > max_inc:
                 max_inc = r[t] - r[k]
                 ii = i
                 kk = k
@@ -73,13 +75,13 @@ def best_best_response_dynamics(N, K, mu, weights, threshold=1000, res=None):
             for i in range(N):
                 k = res[i]
                 reward.append(
-                    mu[k] * weights[i][k] / (np.sum(weights[:, k] * (res == k)) + 1e-9)
+                    mu[k] * weights[i][k] / (np.sum(weights[:, k] * (res == k)) + DENOMINATOR_DELTA)
                 )
             # print(N, K, res + 1, reward)
             return True
         else:
             w[kk] -= weights[ii][kk]
-            r = mu * weights[ii] / (w + weights[ii] + 1e-9)
+            r = mu * weights[ii] / (w + weights[ii] + DENOMINATOR_DELTA)
             w[tt] += weights[ii][tt]
             res[ii] = tt
             # print(res, ii, kk, tt, max_inc)

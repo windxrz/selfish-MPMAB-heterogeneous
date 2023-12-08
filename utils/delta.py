@@ -5,6 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 from model.method import calculate_PNE
+from utils.utils import DENOMINATOR_DELTA, THRESHOLD
 
 
 def calculate_payoff(weights, rewards, strategy):
@@ -88,7 +89,7 @@ def find_pne_1(weights, rewards, isprint=False):
             total_payoff = sum(current_payoffs)
             if first_payoff == -1:
                 first_payoff = total_payoff
-            elif abs(total_payoff - first_payoff) > 1e-5:
+            elif abs(total_payoff - first_payoff) > THRESHOLD:
                 multiple_pne = True
             if isprint:
                 print("PNE", strategy, total_payoff, delta_1)
@@ -131,25 +132,26 @@ def find_pne_2(weights, rewards, isprint=False):
 
         weight_choices = np.array(weight_choices)
 
-        personal_expected_rewards = (rewards / (weight + 1e-6))[strategy]
+        personal_expected_rewards = (rewards / (weight + DENOMINATOR_DELTA))[strategy]
         personal_expected_rewards = personal_expected_rewards * weight_choices
 
         weight = np.tile(weight, N).reshape(N, -1)
+
         for i, choice in enumerate(strategy):
             weight[i][choice] -= weights[i][choice]
 
-        weight_choices = np.tile(weight_choices.reshape(N, 1), [1, K])
-        weight = weight + weight_choices
+        weight = weight + weights
+
         reward_deviation = (
-            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + 1e-6) * weight_choices
+            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + DENOMINATOR_DELTA) * weights
         )
 
         for i, choice in enumerate(strategy):
-            reward_deviation[i][choice] = -1e6
+            reward_deviation[i][choice] = -THRESHOLD
 
         reward_best_deviation = np.max(reward_deviation, axis=1)
         delta_rewards = reward_best_deviation - personal_expected_rewards
-        if np.max(delta_rewards) <= 1e-6:
+        if np.max(delta_rewards) <= THRESHOLD:
             is_pne = True
             delta_1 = -np.max(delta_rewards)
         else:
@@ -163,10 +165,11 @@ def find_pne_2(weights, rewards, isprint=False):
                 best_payoff = total_payoff
             if first_payoff == -1:
                 first_payoff = total_payoff
-            elif abs(total_payoff - first_payoff) > 1e-5:
+            elif abs(total_payoff - first_payoff) > THRESHOLD:
                 multiple_pne = True
             if isprint:
                 print("PNE", strategy, total_payoff, delta_1)
+                print(delta_rewards, reward_best_deviation, personal_expected_rewards, rewards)
             if delta_1 <= best_delta_1:
                 best_pne = strategy
                 best_delta_1 = delta_1
@@ -220,25 +223,25 @@ def calculate_SMAA(weights, rewards, isprint=False):
 
         weight_choices = np.array(weight_choices)
 
-        personal_expected_rewards = (rewards / (weight + 1e-6))[strategy]
+        personal_expected_rewards = (rewards / (weight + DENOMINATOR_DELTA))[strategy]
         personal_expected_rewards = personal_expected_rewards * weight_choices
 
         weight = np.tile(weight, N).reshape(N, -1)
         for i, choice in enumerate(strategy):
             weight[i][choice] -= weights[i][choice]
 
-        weight_choices = np.tile(weight_choices.reshape(N, 1), [1, K])
+        weight_choices = weights
         weight = weight + weight_choices
         reward_deviation = (
-            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + 1e-6) * weight_choices
+            np.tile(rewards.reshape(-1, K), [N, 1]) / (weight + DENOMINATOR_DELTA) * weight_choices
         )
 
         for i, choice in enumerate(strategy):
-            reward_deviation[i][choice] = -1e6
+            reward_deviation[i][choice] = -THRESHOLD
 
         reward_best_deviation = np.max(reward_deviation, axis=1)
         delta_rewards = reward_best_deviation - personal_expected_rewards
-        if np.max(delta_rewards) > 1e-6:
+        if np.max(delta_rewards) > THRESHOLD:
             count += 1
 
     ans = count / N
@@ -277,12 +280,12 @@ if __name__ == "__main__":
     #         weights, rewards
     #     )
 
-    #     l = [ele[1] for ele in no_pne if ele[0] >= best_total_payoff - 1e-5]
+    #     l = [ele[1] for ele in no_pne if ele[0] >= best_total_payoff - THRESHOLD]
     #     delta_nopne = min(l) if len(l) > 0 else 100
 
     #     print(best_pne, best_total_payoff, best_delta_pne, delta_nopne)
 
-    #     # if best_delta_pne > delta_nopne + 1e-3:
+    #     # if best_delta_pne > delta_nopne + THRESHOLD:
     #     #     break
 
     #     if multiple_pne:
