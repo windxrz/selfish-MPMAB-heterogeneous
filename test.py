@@ -6,7 +6,7 @@ from utils.delta import calculate_SMAA
 
 def generate_data():
     Ns = [2]
-    Ks = [10]
+    Ks = [3]
     T = 10000
     dises = ["beta"]
     cates = ["normal"]
@@ -14,7 +14,7 @@ def generate_data():
         for K in Ks:
             for dis in dises:
                 for cate in cates:
-                    for seed in range(50):
+                    for seed in range(51, 100):
                         loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed)
 
 
@@ -25,7 +25,7 @@ def analyze_smaa():
     dis = "beta"
     cate = "normal"
     s = []
-    for seed in range(50):
+    for seed in range(51, 100):
         loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed, seed_reward=0)
         tmp = calculate_SMAA(loop.weights, loop.mu, isprint=True)
         print(tmp)

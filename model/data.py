@@ -76,7 +76,7 @@ class Loop:
                     if self.N == 10 and self.delta > 1e-2:
                         break
                 elif self.N == 2:
-                    if self.K == 10 and self.delta > 1e-2:
+                    if self.delta > 1e-2:
                         break
                 elif (
                     self.N <= 4

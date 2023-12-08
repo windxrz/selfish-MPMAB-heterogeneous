@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.1
+THRESHOLD = 0.01
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -57,8 +57,15 @@ MARKER = {
 }
 
 
-def setting_path(N, K, T, dis, cate):
-    return "N_{}_K_{}_T_{}_dis_{}_cate_{}".format(N, K, T, dis, cate)
+def setting_path(N, K, T, dis, cate, seed_reward):
+    return "N_{}_K_{}_T_{}_dis_{}_cate_{}{}".format(
+        N,
+        K,
+        T,
+        dis,
+        cate,
+        "_seedreward_{}".format(seed_reward) if seed_reward > 0 else "",
+    )
 
 
 def analyze_method_run(setting, method):
@@ -75,6 +82,8 @@ def analyze_method_run(setting, method):
         if len(os.listdir(res_path)) < COUNT * THRESHOLD:
             return 0, None
         for filename in sorted(os.listdir(res_path)):
+            if "res" in filename:
+                continue
             with open(os.path.join(res_path, filename), "rb") as f:
                 res = pkl.loads(f.read())
                 f.close()
@@ -115,8 +124,6 @@ def analyze_method_run(setting, method):
                 f.write(pkl.dumps(final))
                 f.close()
 
-        # print(setting, method, count, final["is_pne"][-1], final["regrets"][-1])
-
         return count, final
 
 
@@ -144,7 +151,7 @@ def analyze_method(setting, method):
         print(
             setting,
             method,
-            "best",
+            count,
             run_setting,
             int(round(final["is_pne"][-1], 0)),
             int(round(final["is_pne_std"][-1], 0)),
@@ -154,8 +161,8 @@ def analyze_method(setting, method):
     return final
 
 
-def plot_part(N, K, T, dis, cate, ax1, ax2, table_std=False):
-    setting_name = setting_path(N, K, T, dis, cate)
+def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
+    setting_name = setting_path(N, K, T, dis, cate, seed_reward)
 
     step = 100
 
@@ -166,7 +173,6 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, table_std=False):
         return
 
     columns = np.arange(T // step_table, T + 1, T // step_table)
-    print(columns)
     table_pne = {}
     table_regrets = {}
 
@@ -241,18 +247,18 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, table_std=False):
 
         pne = {
             t: "{}{}".format(
-                int(res["is_pne"][(t - 1) // step]),
-                " ({})".format(int(res["is_pne_std"][(t - 1) // step]))
-                if table_std
+                "{:.2f}".format((res["is_pne"][(t - 1) // step]) / t),
+                " ({:.2f})".format((res["is_pne_std"][(t - 1) // step]) / t, 2)
+                if seed_reward > 0
                 else "",
             )
             for t in columns
         }
         regrets = {
-            t: "{}{}".format(
-                int(res["regrets"][(t - 1) // step]),
-                " ({})".format(int(res["regrets_std"][(t - 1) // step]))
-                if table_std
+            t: "{:.4f}{}".format(
+                (res["regrets"][(t - 1) // step]) / t,
+                " ({:.4f})".format((res["regrets_std"][(t - 1) // step]) / t)
+                if seed_reward > 0
                 else "",
             )
             for t in columns
@@ -297,8 +303,8 @@ def plot_all():
         ncol=5,
     )
     plt.tight_layout()
-    plt.savefig("figs/all.png", bbox_inches="tight")
-    plt.savefig("figs/all.pdf", bbox_inches="tight")
+    plt.savefig("figs/original.png", bbox_inches="tight")
+    plt.savefig("figs/original.pdf", bbox_inches="tight")
 
 
 def plot_rebuttal():
@@ -327,19 +333,42 @@ def plot_rebuttal():
         ncol=5,
     )
     plt.tight_layout()
-    plt.savefig("figs/all.png", bbox_inches="tight")
-    plt.savefig("figs/all.pdf", bbox_inches="tight")
+    plt.savefig("figs/rebuttal.png", bbox_inches="tight")
+    plt.savefig("figs/rebuttal.pdf", bbox_inches="tight")
 
 
-def export_markdown_format():
-    pass
+def plot_original_std():
+    plt.clf()
+    fig, axes = plt.subplots(2, 2, figsize=(9, 6.5))
+
+    dis = "beta"
+    T = 1000000
+    plot_part(2, 3, T, dis, "normal", axes[1][0], axes[0][0], seed_reward=52)
+    plot_part(4, 4, T * 3, dis, "normal", axes[1][1], axes[0][1], seed_reward=51)
+
+    axes[1][0].set_ylabel("Average Regret", size=FONTSIZE)
+    axes[0][0].set_ylabel("\# of Non-PNE Rounds", size=FONTSIZE)
+
+    lines, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(
+        lines,
+        labels,
+        prop={"size": LEGEND_FONSIZE},
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.1),
+        ncol=5,
+    )
+    plt.tight_layout()
+    plt.savefig("figs/orignal_std.png", bbox_inches="tight")
+    plt.savefig("figs/original_std.pdf", bbox_inches="tight")
 
 
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
     # plot_all()
-    plot_rebuttal()
+    # plot_rebuttal()
+    plot_original_std()
 
 
 if __name__ == "__main__":
