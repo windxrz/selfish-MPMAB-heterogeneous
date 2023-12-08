@@ -248,20 +248,20 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
         ax1.set_xlabel("Round", size=FONTSIZE)
 
         pne = {
-            t: "{}{}".format(
-                "{:.2f}".format((res["is_pne"][(t - 1) // step]) / t),
-                " ({:.2f})".format((res["is_pne_std"][(t - 1) // step]) / t, 2)
+            t: " {:0.2f}".format(res["is_pne"][(t - 1) // step] / t)
+            + (
+                " ({:0.2f})".format((res["is_pne_std"][(t - 1) // step]) / t)
                 if seed_reward > 0
-                else "",
+                else ""
             )
             for t in columns
         }
         regrets = {
-            t: "{:.4f}{}".format(
-                (res["regrets"][(t - 1) // step]) / t,
-                " ({:.4f})".format((res["regrets_std"][(t - 1) // step]) / t)
+            t: " {:0.4f}".format((res["regrets"][(t - 1) // step]) / t)
+            + (
+                " ({:0.4f})".format((res["regrets_std"][(t - 1) // step]) / t)
                 if seed_reward > 0
-                else "",
+                else ""
             )
             for t in columns
         }
@@ -269,8 +269,11 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
         table_pne[method_name] = pne
         table_regrets[method_name] = regrets
 
-    df_pne = pd.DataFrame.from_dict(table_pne, orient="index")
-    df_regrets = pd.DataFrame.from_dict(table_regrets, orient="index")
+    table_pne["zz"] = {t: "zz" for t in columns}
+    table_regrets["zz"] = {t: "zz" for t in columns}
+
+    df_pne = pd.DataFrame.from_dict(table_pne, orient="index").astype(str)
+    df_regrets = pd.DataFrame.from_dict(table_regrets, orient="index").astype(str)
     print("=" * 15 + " " + "is pne" + " " + "=" * 15)
     print(df_pne.to_markdown())
     print("=" * 15 + " " + "regrets" + " " + "=" * 15)
@@ -369,8 +372,8 @@ def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
     plot_all()
-    # plot_rebuttal()
-    # plot_original_std()
+    plot_rebuttal()
+    plot_original_std()
 
 
 if __name__ == "__main__":
