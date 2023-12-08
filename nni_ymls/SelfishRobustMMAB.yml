@@ -20,7 +20,7 @@ search_space:
     _value: [ 0.01, 0.02, 0.05, 0.1, 0.2, 0.5 ]
 
 
-trial_command: python main.py --nni --method SelfishRobustMMAB -T 30000000
+trial_command: python main.py --nni --method SelfishRobustMMAB -T 3000000
 trial_code_directory: ..
 
 trial_concurrency: 6
