@@ -10,7 +10,7 @@ from utils.utils import THRESHOLD, DENOMINATOR_DELTA
 
 
 class Loop:
-    def __init__(self, N, K, T, dis="beta", cate="normal", seed=None):
+    def __init__(self, N, K, T, dis="beta", cate="normal", seed=None, seed_reward=None):
         set_seed(seed)
         self.N = N
         self.K = K
@@ -20,7 +20,7 @@ class Loop:
         if not os.path.exists("data"):
             os.mkdir("data")
         filename = "data/N_{}_K_{}_dis_{}_cate_{}_seed_{}.pkl".format(
-            N, K, dis, cate, seed
+            N, K, dis, cate, seed if seed_reward == 0 else seed_reward - 1
         )
         if os.path.exists(filename):
             with open(filename, "rb") as f:
@@ -102,10 +102,14 @@ class Loop:
             with open(filename, "wb") as f:
                 pkl.dump(dic, f)
 
+        if seed_reward != 0:
+            set_seed(seed * 10)
+
         if self.dis == "beta":
-            self.rewards = np.random.beta(self.alpha * 10, self.beta * 10, (T, K))
+            self.rewards = np.random.beta(self.alpha, self.beta, (T, K))
         elif self.dis == "bernoulli":
             self.rewards = np.random.binomial(1, self.mu, (T, K))
+
 
     def pull(self, choices, t):
         weight = np.zeros(self.K)

@@ -14,7 +14,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.0002
+THRESHOLD = 0.1
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -297,7 +297,8 @@ def plot_rebuttal():
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    plot_rebuttal()
+    plot_all()
+    # plot_rebuttal()
 
 
 if __name__ == "__main__":

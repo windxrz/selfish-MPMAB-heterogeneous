@@ -54,6 +54,8 @@ def parse_args():
 
     parser.add_argument("--nni", action="store_true")
 
+    parser.add_argument("--seed-reward", type=int, default=0)
+
     args = parser.parse_args()
     return args
 
@@ -98,7 +100,7 @@ def main():
 
     res_path_base = os.path.join(
         "results",
-        "N_{}_K_{}_T_{}_dis_{}_cate_{}".format(N, K, T, dis, cate),
+        "N_{}_K_{}_T_{}_dis_{}_cate_{}{}".format(N, K, T, dis, cate, "" if args.seed_reward == 0 else "_seedreward_{}".format(args.seed_reward)),
         method_name,
     )
     if not os.path.exists(res_path_base):
@@ -123,9 +125,9 @@ def main():
 
         if (not os.path.exists(res_file)) or args.debug:
             if args.debug:
-                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data)
+                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data, seed_reward=args.seed_reward)
             else:
-                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data)
+                loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed_data, seed_reward=args.seed_reward)
             print(loop.mu)
             print(loop.delta)
             print(loop.weights)
