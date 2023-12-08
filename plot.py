@@ -14,7 +14,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.2
+THRESHOLD = 0.0002
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2

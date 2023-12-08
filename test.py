@@ -19,8 +19,8 @@ def generate_data():
 
 
 def analyze_smaa():
-    N = 10
-    K = 2
+    N = 2
+    K = 10
     T = 3000000
     dis = "beta"
     cate = "normal"
