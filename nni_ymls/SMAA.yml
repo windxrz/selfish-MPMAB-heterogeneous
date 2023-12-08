@@ -13,7 +13,7 @@ search_space:
 
   cate:
     _type: choice
-    _value: [ "same", "normal" ]
+    _value: [ "normal" ]
   
   beta:
     _type: choice
@@ -24,8 +24,8 @@ search_space:
 trial_command: python main.py --nni --method SMAA -T 3000000
 trial_code_directory: ..
 
-trial_concurrency: 16
-max_trial_number: 16
+trial_concurrency: 8
+max_trial_number: 8
 
 tuner:
   name: TPE

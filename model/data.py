@@ -6,6 +6,7 @@ import numpy as np
 
 from utils.delta import calculate_delta, calculate_SMAA
 from utils.utils import set_seed
+from utils.utils import THRESHOLD, DENOMINATOR_DELTA
 
 
 class Loop:
@@ -73,10 +74,10 @@ class Loop:
                 if delta_pne >= 500:
                     continue
                 if self.K == 2:
-                    if self.N == 10 and self.delta > 1e-3:
+                    if self.N == 10 and self.delta > 1e-2:
                         break
                 elif self.N == 2:
-                    if self.K == 10 and self.delta > 1e-3:
+                    if self.K == 10 and self.delta > 1e-2:
                         break
                 elif (
                     self.N <= 4
@@ -115,10 +116,10 @@ class Loop:
 
         weight_choices = np.array(weight_choices)
         arm_rewards = self.rewards[t][choices]
-        personal_rewards = (self.rewards[t] / (weight + 1e-8))[choices]
+        personal_rewards = (self.rewards[t] / (weight + DENOMINATOR_DELTA))[choices]
         personal_rewards = personal_rewards * weight_choices
 
-        personal_expected_rewards = (self.mu / (weight + 1e-8))[choices]
+        personal_expected_rewards = (self.mu / (weight + DENOMINATOR_DELTA))[choices]
         personal_expected_rewards = personal_expected_rewards * weight_choices
 
         weight = np.tile(weight, self.N).reshape(self.N, -1)
@@ -129,15 +130,15 @@ class Loop:
         weight = weight + weight_choices
         reward_deviation = (
             np.tile(self.mu.reshape(-1, self.K), [self.N, 1])
-            / (weight + 1e-8)
+            / (weight + DENOMINATOR_DELTA)
             * weight_choices
         )
         reward_best_deviation = np.max(reward_deviation, axis=1)
         regrets = np.maximum(0, reward_best_deviation - personal_expected_rewards)
 
         regrets = np.array(regrets)
-        is_pne = (np.sum(regrets) <= 1e-4) and (
-            np.sum(personal_expected_rewards) >= self.welfare - 1e-4
+        is_pne = (np.max(regrets) <= THRESHOLD) and (
+            np.sum(personal_expected_rewards) >= self.welfare - THRESHOLD
         )
         self.tmp_personal_expected_rewards = np.sum(personal_expected_rewards)
         return arm_rewards, personal_rewards, is_pne, regrets

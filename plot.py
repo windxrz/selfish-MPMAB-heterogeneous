@@ -14,7 +14,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.3
+THRESHOLD = 0.2
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -109,9 +109,10 @@ def analyze_method_run(setting, method):
         final["regrets"] = np.mean(final["regrets"], axis=0)
         final["is_pne"] = np.mean(final["is_pne"], axis=0)
 
-        with open(os.path.join(res_path, "res_{}.pkl".format(COUNT)), "wb") as f:
-            f.write(pkl.dumps(final))
-            f.close()
+        if count == COUNT:
+            with open(os.path.join(res_path, "res_{}.pkl".format(count)), "wb") as f:
+                f.write(pkl.dumps(final))
+                f.close()
 
         # print(setting, method, count, final["is_pne"][-1], final["regrets"][-1])
 

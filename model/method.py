@@ -281,6 +281,9 @@ class Ours:
         self.log_probabilities = np.log(np.random.rand(self.T // 2))
         self.prob_idx = 0
 
+        self.arm_expected_personal_rewards = np.zeros(self.K) + DENOMINATOR_DELTA / self.K
+        self.arm_expected_personal_rewards_count = np.zeros(self.K)
+
         self.debug = debug
 
     def next_log_prob(self):
@@ -325,12 +328,12 @@ class Ours:
                     self.utility = (
                         self.mu_hat[k]
                         * self.last_personal_reward
-                        / (self.last_arm_reward + DENOMINATOR_DELTA)
+                        / (self.last_arm_reward + DENOMINATOR_DELTA / 100)
                         + self.gammas[k]
                     )
             else:
                 if self.mood == "discontent":
-                    k = np.random.choice(self.K, p=self.mu_hat / np.sum(self.mu_hat))
+                    k = np.random.choice(self.K, p=self.arm_expected_personal_rewards / (np.sum(self.arm_expected_personal_rewards)))
                 elif self.mood == "content":
                     log_p = self.next_log_prob()
                     if log_p >= self.log_epsilon:
@@ -352,13 +355,15 @@ class Ours:
         self.rewards[k] += arm_reward
         self.count[k] += 1
         self.last_personal_reward, self.last_arm_reward = personal_reward, arm_reward
+        self.arm_expected_personal_rewards[k] = (self.arm_expected_personal_rewards[k] * self.arm_expected_personal_rewards_count[k] + personal_reward) / (self.arm_expected_personal_rewards_count[k] + 1)
+        self.arm_expected_personal_rewards_count[k] += 1
 
         if self.phase == "learning":
             if arm_reward == 0:
                 utility = 0
             else:
                 utility = (
-                    personal_reward / (arm_reward + DENOMINATOR_DELTA) * self.mu_hat[k] + self.gammas[k]
+                    personal_reward / (arm_reward + DENOMINATOR_DELTA / 100) * self.mu_hat[k] + self.gammas[k]
                 )
             self.true_utility = utility
             log_p = self.next_log_prob()

@@ -27,7 +27,7 @@ def analyze_smaa():
     s = []
     for seed in range(50):
         loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed)
-        tmp = calculate_SMAA(loop.weights, loop.mu, isprint=False)
+        tmp = calculate_SMAA(loop.weights, loop.mu, isprint=True)
         print(tmp)
         s.append(tmp)
 
@@ -36,7 +36,7 @@ def analyze_smaa():
 
 if __name__ == "__main__":
     # loop = Loop(3, 2, 10, cate="same")
-    # generate_data()
+    generate_data()
     analyze_smaa()
     # choices = [1, 0, 1]
     # t = 0

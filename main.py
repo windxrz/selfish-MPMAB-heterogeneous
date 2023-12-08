@@ -48,7 +48,7 @@ def parse_args():
     parser.add_argument("--c2", type=float, default=100000000)
     parser.add_argument("--c3", type=float, default=100)
     parser.add_argument("--eta", type=float, default=0)
-    parser.add_argument("--epsilon", type=float, default=1e-2)
+    parser.add_argument("--epsilon", type=float, default=1e-3)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--no-gamma", action="store_true", default=False)
 
@@ -111,8 +111,9 @@ def main():
         last_mood = ["discontent"] * args.N
         last_choice = [0] * args.N
         last_utility = [0] * args.N
+        last_is_pne = False
     for seed_data in range(0, total_runs):
-        if args.debug and seed_data != 1:
+        if args.debug and seed_data != 0:
             continue
 
         print("Running {}/{}".format(seed_data + 1, total_runs))
@@ -131,7 +132,6 @@ def main():
             if args.debug:
                 res_delta = calculate_delta(loop.weights, loop.mu, isprint=True)
                 print(res_delta)
-                exit()
             players = []
             for i in range(args.N):
                 if method == "TotalReward":
@@ -219,8 +219,8 @@ def main():
                         )
                         print([player.true_utility.round(6) for player in players])
                         print( is_pne,
-                            regrets.round(2).tolist(),
-                            loop.mu.round(2))
+                            regrets.round(6).tolist(),
+                            loop.mu.round(6))
                         print(
                             "counting best: ",
                             [player.count_best.argmax() for player in players],
@@ -233,6 +233,7 @@ def main():
                     last_mood = [player.mood for player in players]
                     last_choice = [player.action for player in players]
                     last_utility = [player.utility for player in players]
+                    last_is_pne = is_pne
 
             res_arm_rewards = np.concatenate(res_arm_rewards, axis=0)
 
