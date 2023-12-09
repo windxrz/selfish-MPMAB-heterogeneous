@@ -14,13 +14,13 @@ def generate_data():
         for K in Ks:
             for dis in dises:
                 for cate in cates:
-                    for seed in range(51, 100):
+                    for seed in range(50):
                         loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed)
 
 
 def analyze_smaa():
-    N = 10
-    K = 2
+    N = 2
+    K = 10
     T = 3000000
     dis = "beta"
     cate = "normal"

@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.2
+THRESHOLD = 0.001
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -200,13 +200,15 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
             markerfacecolor="None",
             markeredgewidth=MARKEREDGEWIDTH,
         )
-        ax1.fill_between(
-            range(1, T + 1, step),
-            res["regrets"] - res["regrets_std"],
-            res["regrets"] + res["regrets_std"],
-            color=COLOR[method_name],
-            alpha=0.1,
-        )
+
+        if seed_reward > 0:
+            ax1.fill_between(
+                range(1, T + 1, step),
+                res["regrets"] - res["regrets_std"],
+                res["regrets"] + res["regrets_std"],
+                color=COLOR[method_name],
+                alpha=0.1,
+            )
 
         ax2.plot(
             range(1, T + 1, step),
@@ -220,13 +222,14 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
             markerfacecolor="None",
             markeredgewidth=MARKEREDGEWIDTH,
         )
-        ax2.fill_between(
-            range(1, T + 1, step),
-            (np.arange(1, T + 1, step) - res["is_pne"]) - res["is_pne_std"],
-            (np.arange(1, T + 1, step) - res["is_pne"]) + res["is_pne_std"],
-            color=COLOR[method_name],
-            alpha=0.1,
-        )
+        if seed_reward > 0:
+            ax2.fill_between(
+                range(1, T + 1, step),
+                (np.arange(1, T + 1, step) - res["is_pne"]) - res["is_pne_std"],
+                (np.arange(1, T + 1, step) - res["is_pne"]) + res["is_pne_std"],
+                color=COLOR[method_name],
+                alpha=0.1,
+            )
 
         ax1.ticklabel_format(style="sci", scilimits=(-3, 3), axis="both")
         ax2.ticklabel_format(style="sci", scilimits=(-3, 3), axis="both")
@@ -368,12 +371,39 @@ def plot_original_std():
     plt.savefig("figs/original_std.pdf", bbox_inches="tight")
 
 
+def plot_rebuttal_std():
+    plt.clf()
+    fig, axes = plt.subplots(2, 2, figsize=(9, 6.5))
+
+    dis = "beta"
+    T = 3000000
+    plot_part(2, 10, T, dis, "normal", axes[1][0], axes[0][0], seed_reward=24)
+    plot_part(10, 2, T, dis, "normal", axes[1][1], axes[0][1], seed_reward=1)
+
+    axes[1][0].set_ylabel("Average Regret", size=FONTSIZE)
+    axes[0][0].set_ylabel("\# of Non-PNE Rounds", size=FONTSIZE)
+
+    lines, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(
+        lines,
+        labels,
+        prop={"size": LEGEND_FONSIZE},
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.1),
+        ncol=5,
+    )
+    plt.tight_layout()
+    plt.savefig("figs/rebuttal_std.png", bbox_inches="tight")
+    plt.savefig("figs/rebuttal_std.pdf", bbox_inches="tight")
+
+
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    plot_all()
-    plot_rebuttal()
-    plot_original_std()
+    # plot_all()
+    # plot_rebuttal()
+    # plot_original_std()
+    plot_rebuttal_std()
 
 
 if __name__ == "__main__":
