@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.001
+THRESHOLD = 0.0001
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -251,7 +251,7 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
         ax1.set_xlabel("Round", size=FONTSIZE)
 
         pne = {
-            t: " {:0.2f}".format(res["is_pne"][(t - 1) // step] / t)
+            t: " {:0.2f}".format(1 - res["is_pne"][(t - 1) // step] / t)
             + (
                 " ({:0.2f})".format((res["is_pne_std"][(t - 1) // step]) / t)
                 if seed_reward > 0
@@ -288,11 +288,11 @@ def plot_all():
     fig, axes = plt.subplots(2, 4, figsize=(17, 6.5))
 
     dis = "beta"
-    T = 1000000
-    plot_part(2, 3, T, dis, "same", axes[1][0], axes[0][0])
-    plot_part(2, 3, T, dis, "normal", axes[1][1], axes[0][1])
-    plot_part(4, 4, T * 3, dis, "same", axes[1][2], axes[0][2])
-    plot_part(4, 4, T * 3, dis, "normal", axes[1][3], axes[0][3])
+    T = 3000000
+    plot_part(3, 5, T, dis, "same", axes[1][0], axes[0][0])
+    plot_part(3, 5, T, dis, "normal", axes[1][1], axes[0][1])
+    plot_part(5, 3, T, dis, "same", axes[1][2], axes[0][2])
+    plot_part(5, 3, T, dis, "normal", axes[1][3], axes[0][3])
     # axes[1][2].set_ylim(-5e3, 55e3)
     # axes[1][3].set_ylim(-5e3, 55e3)
     # plot_part(5, 4, T, dis, "normal", axes[0][4], axes[1][4])
@@ -400,10 +400,11 @@ def plot_rebuttal_std():
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    # plot_all()
+    plot_all()
     # plot_rebuttal()
     # plot_original_std()
-    plot_rebuttal_std()
+    # plot_rebuttal_std()
+
 
 
 if __name__ == "__main__":

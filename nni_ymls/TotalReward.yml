@@ -1,11 +1,11 @@
 search_space:
   N:
     _type: choice
-    _value: [ 10 ]
+    _value: [ 3 ]
   
   K:
     _type: choice
-    _value: [ 2 ]
+    _value: [ 5 ]
 
   dis:
     _type: choice
@@ -13,7 +13,7 @@ search_space:
 
   cate:
     _type: choice
-    _value: [ "normal" ]
+    _value: [ "normal", "same" ]
   
   alpha:
     _type: choice
@@ -24,7 +24,7 @@ trial_command: python main.py --nni --method TotalReward -T 3000000
 trial_code_directory: ..
 
 trial_concurrency: 5
-max_trial_number: 5
+max_trial_number: 10
 
 tuner:
   name: TPE

@@ -67,25 +67,27 @@ class Loop:
                 delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(
                     self.weights, self.mu
                 )
-                # print("delta:", delta_pne, delta_nopne, self.delta)
+                print("delta:", delta_pne, delta_nopne, self.delta)
                 # if smaa < 0.5:
                 #     continue
                 if delta_pne >= 500:
                     continue
-                if self.K == 2:
-                    if self.N == 10 and self.delta > 1e-2:
-                        break
-                elif self.N == 2:
-                    if self.delta > 1e-2:
-                        break
-                elif (
-                    self.N <= 4
-                    and self.delta > 0.03
-                    or (self.N == 5 and self.delta > 0.01)
-                    or (self.N > 5 and self.delta > 1e-4)
-                    or (self.N < self.K and cate == "rewardsame")
-                ):
-                    break
+                # if self.K == 2:
+                #     if self.N == 10 and self.delta > 1e-2:
+                #         break
+                # elif self.N == 2:
+                #     if self.delta > 1e-2:
+                #         break
+                # elif (
+                #     self.N <= 4
+                #     and self.delta > 0.03
+                #     or (self.N == 5 and self.delta > 0.01)
+                #     or (self.N > 5 and self.delta > 1e-4)
+                #     or (self.N < self.K and cate == "rewardsame")
+                # ):
+                #     break
+
+                break
 
             smaa = calculate_SMAA(self.weights, self.mu)
             print("smaa:", smaa)
