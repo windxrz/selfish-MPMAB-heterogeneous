@@ -1,11 +1,11 @@
 search_space:
   N:
     _type: choice
-    _value: [ 3 ]
+    _value: [ 8 ]
   
   K:
     _type: choice
-    _value: [ 5 ]
+    _value: [ 3 ]
 
   dis:
     _type: choice
@@ -13,7 +13,7 @@ search_space:
 
   cate:
     _type: choice
-    _value: [ "normal", "same" ]
+    _value: [ "normal" ]
   
   c1:
     _type: choice
@@ -39,8 +39,8 @@ search_space:
 trial_command: python main.py --nni --method Ours -T 3000000 
 trial_code_directory: ..
 
-trial_concurrency: 54
-max_trial_number: 216
+trial_concurrency: 18
+max_trial_number: 108
 
 tuner:
   name: TPE

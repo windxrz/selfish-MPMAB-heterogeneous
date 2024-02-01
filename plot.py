@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
 COUNT = 50
-THRESHOLD = 0.0001
+THRESHOLD = 0.1
 
 LINEWIDTH = 3
 MARKEREDGEWIDTH = 2
@@ -163,7 +163,7 @@ def analyze_method(setting, method):
     return final
 
 
-def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
+def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0, std=True):
     setting_name = setting_path(N, K, T, dis, cate, seed_reward)
 
     step = 100
@@ -201,7 +201,7 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
             markeredgewidth=MARKEREDGEWIDTH,
         )
 
-        if seed_reward > 0:
+        if std:
             ax1.fill_between(
                 range(1, T + 1, step),
                 res["regrets"] - res["regrets_std"],
@@ -222,7 +222,7 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
             markerfacecolor="None",
             markeredgewidth=MARKEREDGEWIDTH,
         )
-        if seed_reward > 0:
+        if std:
             ax2.fill_between(
                 range(1, T + 1, step),
                 (np.arange(1, T + 1, step) - res["is_pne"]) - res["is_pne_std"],
@@ -240,10 +240,10 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
         ax2.tick_params(axis="both", which="major", labelsize=TICKFONTSIZE)
 
         ax2.set_title(
-            "N={}, K={}, {}".format(
+            "$N={}$, $K={}$, {}".format(
                 N,
                 K,
-                "Equal weights" if cate == "same" else "Different weights",
+                "Homogeneous" if cate == "same" else "Standard",
             ),
             size=FONTSIZE,
             pad=15,
@@ -283,16 +283,22 @@ def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0):
     print(df_regrets.to_markdown())
 
 
-def plot_all():
+def plot_all(cate="same"):
     plt.clf()
     fig, axes = plt.subplots(2, 4, figsize=(17, 6.5))
 
     dis = "beta"
     T = 3000000
-    plot_part(3, 5, T, dis, "same", axes[1][0], axes[0][0])
-    plot_part(3, 5, T, dis, "normal", axes[1][1], axes[0][1])
-    plot_part(5, 3, T, dis, "same", axes[1][2], axes[0][2])
-    plot_part(5, 3, T, dis, "normal", axes[1][3], axes[0][3])
+    if cate == "same":
+        plot_part(3, 5, T, dis, "same", axes[1][0], axes[0][0], std=False)
+        plot_part(3, 5, T, dis, "normal", axes[1][1], axes[0][1], std=False)
+        plot_part(5, 3, T, dis, "same", axes[1][2], axes[0][2], std=False)
+        plot_part(5, 3, T, dis, "normal", axes[1][3], axes[0][3], std=False)
+    else:
+        plot_part(3, 5, T, dis, "normal", axes[1][0], axes[0][0], std=False)
+        plot_part(3, 8, T, dis, "normal", axes[1][1], axes[0][1], std=False)
+        plot_part(5, 3, T, dis, "normal", axes[1][2], axes[0][2], std=False)
+        plot_part(8, 3, T, dis, "normal", axes[1][3], axes[0][3], std=False) 
     # axes[1][2].set_ylim(-5e3, 55e3)
     # axes[1][3].set_ylim(-5e3, 55e3)
     # plot_part(5, 4, T, dis, "normal", axes[0][4], axes[1][4])
@@ -345,14 +351,22 @@ def plot_rebuttal():
     plt.savefig("figs/rebuttal.pdf", bbox_inches="tight")
 
 
-def plot_original_std():
+def plot_original_std(cate="same"):
     plt.clf()
-    fig, axes = plt.subplots(2, 2, figsize=(9, 6.5))
+    fig, axes = plt.subplots(2, 4, figsize=(17, 6.5))
 
     dis = "beta"
-    T = 1000000
-    plot_part(2, 3, T, dis, "normal", axes[1][0], axes[0][0], seed_reward=52)
-    plot_part(4, 4, T * 3, dis, "normal", axes[1][1], axes[0][1], seed_reward=51)
+    T = 3000000
+    if cate == "same":
+        plot_part(3, 5, T, dis, "same", axes[1][0], axes[0][0], seed_reward=2)
+        plot_part(3, 5, T, dis, "normal", axes[1][1], axes[0][1], seed_reward=4)
+        plot_part(5, 3, T, dis, "same", axes[1][2], axes[0][2], seed_reward=2)
+        plot_part(5, 3, T, dis, "normal", axes[1][3], axes[0][3], seed_reward=3)
+    else:
+        plot_part(3, 5, T, dis, "normal", axes[1][0], axes[0][0], seed_reward=4)
+        plot_part(3, 8, T, dis, "normal", axes[1][1], axes[0][1])
+        plot_part(5, 3, T, dis, "normal", axes[1][2], axes[0][2], seed_reward=3)
+        plot_part(8, 3, T, dis, "normal", axes[1][3], axes[0][3]) 
 
     axes[1][0].set_ylabel("Average Regret", size=FONTSIZE)
     axes[0][0].set_ylabel("\# of Non-PNE Rounds", size=FONTSIZE)
@@ -367,7 +381,7 @@ def plot_original_std():
         ncol=5,
     )
     plt.tight_layout()
-    plt.savefig("figs/orignal_std.png", bbox_inches="tight")
+    plt.savefig("figs/original_std.png", bbox_inches="tight")
     plt.savefig("figs/original_std.pdf", bbox_inches="tight")
 
 
@@ -400,9 +414,9 @@ def plot_rebuttal_std():
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    plot_all()
+    # plot_all("normal")
     # plot_rebuttal()
-    # plot_original_std()
+    plot_original_std("same")
     # plot_rebuttal_std()
 
 

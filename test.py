@@ -19,30 +19,35 @@ def generate_data():
                         loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed)
 
 
-def analyze_data():
-    N = 10
-    K = 3
+def analyze_data(N, K, cates):
     T = 3000000
     dis = "beta"
-    cates = ["normal", "same"]
     s = []
     for seed in range(0, 50):
         for cate in cates:
             loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed, seed_reward=0)
             tmp = calculate_SMAA(loop.weights, loop.mu, isprint=True)
             delta_pne, delta_nopne, delta, welfare = calculate_delta(
-                        loop.weights, loop.mu
-                    )
-            print(tmp, delta)
+                loop.weights, loop.mu
+            )
+            print(seed + 1, tmp, delta)
             s.append([tmp, delta])
 
     print(np.mean(s, axis=1))
 
 
+# def test():
+#     N = 8
+#     K = 3
+#     T = 3000000
+#     cate = ""
+#     loop = Loop(N, K, T, dis=dis, cate=cate, seed=seed, seed_reward=1)
+
+
 if __name__ == "__main__":
     # loop = Loop(3, 2, 10, cate="same")
     # generate_data()
-    analyze_data()
+    analyze_data(3, 8, ["normal"])
     # choices = [1, 0, 1]
     # t = 0
     # print(loop.pull(choices, t))
