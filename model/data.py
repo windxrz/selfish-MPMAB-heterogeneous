@@ -64,9 +64,19 @@ class Loop:
                 elif cate == "smaa":
                     self.weights = np.ones((self.N, self.K))
 
-                delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(
-                    self.weights, self.mu
-                )
+                if N <= 10:
+                    delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(
+                        self.weights, self.mu
+                    )
+                else:
+                    delta_pne, delta_nopne, self.delta, self.welfare = 0, 0, 0, 0
+                
+                if N > 10:
+                    z = min(np.min(self.alpha), np.min(self.beta))
+                    self.alpha = 1000 / z * self.alpha
+                    self.beta = 1000 / z * self.beta
+                
+
                 print("delta:", delta_pne, delta_nopne, self.delta)
                 # if smaa < 0.5:
                 #     continue
@@ -110,6 +120,8 @@ class Loop:
             self.rewards = np.random.beta(self.alpha, self.beta, (T, K))
         elif self.dis == "bernoulli":
             self.rewards = np.random.binomial(1, self.mu, (T, K))
+        
+        print("reward:", self.rewards)
 
     def pull(self, choices, t):
         weight = np.zeros(self.K)

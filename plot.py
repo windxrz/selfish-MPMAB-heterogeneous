@@ -9,7 +9,7 @@ from matplotlib import rc
 
 rc("font", **{"family": "sans-serif", "sans-serif": ["Times New Roman"]})
 
-rc("text", usetex=True)
+# rc("text", usetex=True)
 
 matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
@@ -161,6 +161,22 @@ def analyze_method(setting, method):
             int(round(final["regrets_std"][-1], 0)),
         )
     return final
+
+def analyze_method_all(setting, method):
+    is_pne_max = 0
+    regret_min = 1e9
+    final = None
+    run_setting = ""
+    count_final = 0
+    res_all = {}
+    for run in sorted(os.listdir(os.path.join("results", setting))):
+        if method + "_" not in run:
+            continue
+        count, res = analyze_method_run(setting, run)
+        if count < COUNT * THRESHOLD:
+            continue
+        res_all[run] = res
+    return res_all
 
 
 def plot_part(N, K, T, dis, cate, ax1, ax2, seed_reward=0, std=True):
@@ -411,12 +427,73 @@ def plot_rebuttal_std():
     plt.savefig("figs/rebuttal_std.pdf", bbox_inches="tight")
 
 
+def plot_ours():
+    T = 3000000
+    dis = "beta"
+    cate = "normal"
+    seed_reward = 0
+    for i in range(2):
+        if i == 0:
+            N = 3
+            K = 5
+        else:
+            N = 5
+            K = 3
+        setting_name = setting_path(N, K, T, dis, cate, seed_reward)
+
+        step = 100
+
+        step_table = 5
+
+        print(setting_name)
+        if not os.path.exists(os.path.join("results", setting_name)):
+            return
+
+        columns = np.arange(T // step_table, T + 1, T // step_table)
+        table_pne = {}
+        table_regrets = {}
+
+        method = "Ours"
+        res_all = analyze_method_all(setting_name, method)
+        
+        for method_name, res in res_all.items():
+            pne = {
+                t: " {:0.2f}".format(1 - res["is_pne"][(t - 1) // step] / t)
+                + (
+                    " ({:0.2f})".format((res["is_pne_std"][(t - 1) // step]) / t)
+                    if seed_reward > 0
+                    else ""
+                )
+                for t in columns
+            }
+            regrets = {
+                t: " {:0.4f}".format((res["regrets"][(t - 1) // step]) / t)
+                + (
+                    " ({:0.4f})".format((res["regrets_std"][(t - 1) // step]) / t)
+                    if seed_reward > 0
+                    else ""
+                )
+                for t in columns
+            }
+
+            table_pne[method_name] = pne
+            table_regrets[method_name] = regrets
+
+        df_pne = pd.DataFrame.from_dict(table_pne, orient="index").astype(str)
+        df_regrets = pd.DataFrame.from_dict(table_regrets, orient="index").astype(str)
+        print("N, K:", N, K)
+        print("=" * 15 + " " + "is pne" + " " + "=" * 15)
+        print(df_pne.to_markdown())
+        print("=" * 15 + " " + "regrets" + " " + "=" * 15)
+        print(df_regrets.to_markdown())
+
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
-    # plot_all("normal")
+    plot_all("normal")
+    # plot_ours()
     # plot_rebuttal()
-    plot_original_std("same")
+    # plot_original_std("same")
     # plot_rebuttal_std()
 
 

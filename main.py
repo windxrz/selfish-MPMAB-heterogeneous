@@ -13,8 +13,8 @@ from utils.delta import calculate_delta
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-N", type=int, default=10)
-    parser.add_argument("-K", type=int, default=2)
+    parser.add_argument("-N", type=int, default=50)
+    parser.add_argument("-K", type=int, default=30)
     parser.add_argument("-T", type=int, default=3000000)
     parser.add_argument(
         "--dis", type=str, choices=["bernoulli", "beta"], default="beta"
@@ -48,7 +48,7 @@ def parse_args():
     parser.add_argument("--c2", type=float, default=100000000)
     parser.add_argument("--c3", type=float, default=100)
     parser.add_argument("--eta", type=float, default=0)
-    parser.add_argument("--epsilon", type=float, default=1e-3)
+    parser.add_argument("--epsilon", type=float, default=5e-3)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--no-gamma", action="store_true", default=False)
 
@@ -131,26 +131,15 @@ def main():
         count_tmp = np.zeros(8)
 
         if (not os.path.exists(res_file)) or args.debug:
-            if args.debug:
-                loop = Loop(
-                    N,
-                    K,
-                    T,
-                    dis=dis,
-                    cate=cate,
-                    seed=seed_data,
-                    seed_reward=args.seed_reward,
-                )
-            else:
-                loop = Loop(
-                    N,
-                    K,
-                    T,
-                    dis=dis,
-                    cate=cate,
-                    seed=seed_data,
-                    seed_reward=args.seed_reward,
-                )
+            loop = Loop(
+                N,
+                K,
+                T,
+                dis=dis,
+                cate=cate,
+                seed=seed_data,
+                seed_reward=args.seed_reward,
+            )
             print(loop.mu)
             print(loop.delta)
             print(loop.weights)

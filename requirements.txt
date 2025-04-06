@@ -1,0 +1,6 @@
+joblib==1.2.0
+matplotlib==3.8.1
+nni==2.10
+numpy==1.24.3
+pandas==2.0.1
+tqdm==4.65.0
