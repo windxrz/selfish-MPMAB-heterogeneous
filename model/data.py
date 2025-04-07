@@ -29,7 +29,7 @@ class Loop:
             self.weights = dic["weights"]
             self.mu = dic["mu"]
             self.delta = dic["delta"]
-            if self.dis == "beta":
+            if "beta" in self.dis:
                 self.alpha = dic["alpha"]
                 self.beta = dic["beta"]
             if "welfare" in dic:
@@ -50,6 +50,25 @@ class Loop:
                     self.mu = self.alpha / (self.alpha + self.beta)
                 elif self.dis == "bernoulli":
                     self.mu = np.random.rand(K)
+                
+                if self.dis == "beta_power":
+                    alpha = 1.05
+                    mu_max = 0.98
+
+                    log_mu = [0]  # start with log(mu_max) = 0
+                    for _ in range(K - 1):
+                        gap = np.random.uniform(np.log(alpha), np.log(alpha) + 0.1)  # the "+ 0.5" adds variation
+                        log_mu.append(log_mu[-1] - gap)
+
+                    mu_vals = np.exp(log_mu)
+
+                    mu_vals = mu_vals / np.max(mu_vals) * mu_max
+
+                    self.mu = mu_vals
+
+                    total = 1000
+                    self.alpha = self.mu * total
+                    self.beta = (1 - self.mu) * total
 
                 if cate == "normal":
                     self.weights = np.random.rand(self.N, self.K)
@@ -64,65 +83,48 @@ class Loop:
                 elif cate == "smaa":
                     self.weights = np.ones((self.N, self.K))
 
-                if N <= 10:
+                if N <= 5:
                     delta_pne, delta_nopne, self.delta, self.welfare = calculate_delta(
                         self.weights, self.mu
                     )
                 else:
                     delta_pne, delta_nopne, self.delta, self.welfare = 0, 0, 0, 0
                 
-                if N > 10:
+                if N > 10 and "power" not in self.dis:
                     z = min(np.min(self.alpha), np.min(self.beta))
+                    print(z)
                     self.alpha = 1000 / z * self.alpha
                     self.beta = 1000 / z * self.beta
                 
 
                 print("delta:", delta_pne, delta_nopne, self.delta)
-                # if smaa < 0.5:
-                #     continue
                 if delta_pne >= 500:
                     continue
-                # if self.K == 2:
-                #     if self.N == 10 and self.delta > 1e-2:
-                #         break
-                # elif self.N == 2:
-                #     if self.delta > 1e-2:
-                #         break
-                # elif (
-                #     self.N <= 4
-                #     and self.delta > 0.03
-                #     or (self.N == 5 and self.delta > 0.01)
-                #     or (self.N > 5 and self.delta > 1e-4)
-                #     or (self.N < self.K and cate == "rewardsame")
-                # ):
-                #     break
 
                 break
 
             smaa = calculate_SMAA(self.weights, self.mu)
-            print("smaa:", smaa)
 
             dic = {}
             dic["weights"] = self.weights
             dic["mu"] = self.mu
             dic["delta"] = self.delta
             dic["welfare"] = self.welfare
-            if self.dis == "beta":
+            if "beta" in self.dis:
                 dic["alpha"] = self.alpha
                 dic["beta"] = self.beta
+            print(dic)
             with open(filename, "wb") as f:
                 pkl.dump(dic, f)
 
         if seed_reward != 0:
             set_seed(seed * 10)
 
-        if self.dis == "beta":
+        if "beta" in self.dis:
             self.rewards = np.random.beta(self.alpha, self.beta, (T, K))
         elif self.dis == "bernoulli":
             self.rewards = np.random.binomial(1, self.mu, (T, K))
         
-        print("reward:", self.rewards)
-
     def pull(self, choices, t):
         weight = np.zeros(self.K)
         weight_choices = []

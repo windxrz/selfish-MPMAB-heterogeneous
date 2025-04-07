@@ -14,7 +14,6 @@ rc("font", **{"family": "sans-serif", "sans-serif": ["Times New Roman"]})
 matplotlib.use("Agg")
 matplotlib.rcParams["pdf.fonttype"] = 42
 
-COUNT = 50
 THRESHOLD = 0.1
 
 LINEWIDTH = 3
@@ -70,6 +69,11 @@ def setting_path(N, K, T, dis, cate, seed_reward):
 
 def analyze_method_run(setting, method):
     res_path = os.path.join("results", setting, method)
+
+    if "N_30" in setting or "N_50" in setting:
+        COUNT = 10
+    else:
+        COUNT = 50
 
     if os.path.exists(os.path.join(res_path, "res_{}.pkl".format(COUNT))):
         with open(os.path.join(res_path, "res_{}.pkl".format(COUNT)), "rb") as f:
@@ -136,13 +140,17 @@ def analyze_method(setting, method):
     for run in sorted(os.listdir(os.path.join("results", setting))):
         if method + "_" not in run:
             continue
-        count, res = analyze_method_run(setting, run)
-        if count < COUNT * THRESHOLD:
+        if "00000000" in run:
             continue
+        count, res = analyze_method_run(setting, run)
         # if res["is_pne"][-1] > is_pne_max:
         #     is_pne_max = res["is_pne"][-1]
         #     final = res.copy()
         #     run_setting = run
+
+        if count == 0:
+            continue
+
         if res["regrets"][-1] < regret_min:
             count_final = count
             regret_min = res["regrets"][-1]
@@ -173,8 +181,6 @@ def analyze_method_all(setting, method):
         if method + "_" not in run:
             continue
         count, res = analyze_method_run(setting, run)
-        if count < COUNT * THRESHOLD:
-            continue
         res_all[run] = res
     return res_all
 
@@ -311,10 +317,10 @@ def plot_all(cate="same"):
         plot_part(5, 3, T, dis, "same", axes[1][2], axes[0][2], std=False)
         plot_part(5, 3, T, dis, "normal", axes[1][3], axes[0][3], std=False)
     else:
-        plot_part(3, 5, T, dis, "normal", axes[1][0], axes[0][0], std=False)
-        plot_part(3, 8, T, dis, "normal", axes[1][1], axes[0][1], std=False)
-        plot_part(5, 3, T, dis, "normal", axes[1][2], axes[0][2], std=False)
-        plot_part(8, 3, T, dis, "normal", axes[1][3], axes[0][3], std=False) 
+        # plot_part(3, 5, T, dis, "normal", axes[1][0], axes[0][0], std=False)
+        plot_part(30, 50, T, dis, "normal", axes[1][1], axes[0][1], std=False)
+        plot_part(30, 30, T, dis, "normal", axes[1][2], axes[0][2], std=False)
+        plot_part(50, 30, T, dis, "normal", axes[1][3], axes[0][3], std=False)
     # axes[1][2].set_ylim(-5e3, 55e3)
     # axes[1][3].set_ylim(-5e3, 55e3)
     # plot_part(5, 4, T, dis, "normal", axes[0][4], axes[1][4])
@@ -487,6 +493,7 @@ def plot_ours():
         print("=" * 15 + " " + "regrets" + " " + "=" * 15)
         print(df_regrets.to_markdown())
 
+
 def main():
     if not os.path.exists("figs"):
         os.mkdir("figs")
@@ -495,7 +502,6 @@ def main():
     # plot_rebuttal()
     # plot_original_std("same")
     # plot_rebuttal_std()
-
 
 
 if __name__ == "__main__":

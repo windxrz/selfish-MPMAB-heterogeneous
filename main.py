@@ -14,10 +14,10 @@ from utils.delta import calculate_delta
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-N", type=int, default=50)
-    parser.add_argument("-K", type=int, default=30)
+    parser.add_argument("-K", type=int, default=50)
     parser.add_argument("-T", type=int, default=3000000)
     parser.add_argument(
-        "--dis", type=str, choices=["bernoulli", "beta"], default="beta"
+        "--dis", type=str, choices=["bernoulli", "beta", "beta_power"], default="beta"
     )
     parser.add_argument(
         "--cate", type=str, choices=["normal", "same", "smaa"], default="normal"
@@ -45,10 +45,10 @@ def parse_args():
 
     # Ours
     parser.add_argument("--c1", type=float, default=0.0001)
-    parser.add_argument("--c2", type=float, default=100000000)
-    parser.add_argument("--c3", type=float, default=100)
-    parser.add_argument("--eta", type=float, default=0)
-    parser.add_argument("--epsilon", type=float, default=5e-3)
+    parser.add_argument("--c2", type=float, default=1000000000)
+    parser.add_argument("--c3", type=float, default=200)
+    parser.add_argument("--eta", type=float, default=2)
+    parser.add_argument("--epsilon", type=float, default=5e-5)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--no-gamma", action="store_true", default=False)
 
@@ -113,7 +113,7 @@ def main():
     if not os.path.exists(res_path_base):
         os.makedirs(res_path_base)
 
-    total_runs = 50
+    total_runs = 10
     pne_nums = []
     regrets_sum = []
     if args.debug:
@@ -122,9 +122,6 @@ def main():
         last_utility = [0] * args.N
         last_is_pne = False
     for seed_data in range(0, total_runs):
-        if args.debug and seed_data != 0:
-            continue
-
         print("Running {}/{}".format(seed_data + 1, total_runs))
 
         res_file = os.path.join(res_path_base, "{}.pkl".format(seed_data))
@@ -144,7 +141,10 @@ def main():
             print(loop.delta)
             print(loop.weights)
             if args.debug:
-                res_delta = calculate_delta(loop.weights, loop.mu, isprint=True)
+                if N <= 5:
+                    res_delta = calculate_delta(loop.weights, loop.mu, isprint=True)
+                else:
+                    res_delta = 0
                 print(res_delta)
             players = []
             for i in range(args.N):
@@ -187,7 +187,9 @@ def main():
             res_personal_rewards = []
             res_is_pne = []
             res_regrets = []
+            regret_sum = 0
             print("here before t")
+            print_interval = 0
             for t in tqdm(range(T)):
                 choices = []
                 for i in range(N):
@@ -199,56 +201,58 @@ def main():
                 res_personal_rewards.append(personal_rewards.reshape(1, -1))
                 res_is_pne.append(is_pne)
                 res_regrets.append(regrets.reshape(1, -1))
+                regret_sum += np.sum(regrets)
                 for i in range(N):
                     players[i].update(arm_rewards[i], personal_rewards[i], choices)
 
-                if args.method == "Ours" and args.debug:
-                    flag = False
-                    for i in range(args.N):
-                        if (
-                            players[i].mood != last_mood[i]
-                            or players[i].action != last_choice[i]
-                        ):
-                            flag = True
-                            break
+                if args.debug:
+                    # flag = False
+                    # for i in range(args.N):
+                    #     if (
+                    #         players[i].mood != last_mood[i]
+                    #         or players[i].action != last_choice[i]
+                    #     ):
+                    #         flag = True
+                    #         break
+                    flag = True
                     if flag:
-                        print("=" * 15 + "t={}".format(t) + "=" * 15)
-                        print(choices)
-                        print(
-                            [
-                                (
-                                    last_mood[i][0],
-                                    last_choice[i],
-                                    round(last_utility[i], 6),
-                                )
-                                for i in range(args.N)
-                            ],
-                        )
-                        print(
-                            [
-                                (
-                                    player.mood[0],
-                                    player.action,
-                                    round(player.utility, 6),
-                                )
-                                for player in players
-                            ],
-                        )
-                        print([player.true_utility.round(6) for player in players])
-                        print(is_pne, regrets.round(6).tolist(), loop.mu.round(6))
-                        print(
-                            "counting best: ",
-                            [player.count_best.argmax() for player in players],
-                        )
-                        print("delta:", res_delta)
-                    # if choices == [3, 0, 1, 2]:
-                    #     exit()
-                    # exit()
+                        print_interval += 1
+                        if print_interval % 100 == 0:
+                            print("=" * 15 + "t={}".format(t) + "=" * 15)
+                            print(choices)
+                            # print(
+                            #     [
+                            #         (
+                            #             last_mood[i][0],
+                            #             last_choice[i],
+                            #             round(last_utility[i], 6),
+                            #         )
+                            #         for i in range(args.N)
+                            #     ],
+                            # )
+                            # print(
+                            #     [
+                            #         (
+                            #             player.mood[0],
+                            #             player.action,
+                            #             round(player.utility, 6),
+                            #         )
+                            #         for player in players
+                            #     ],
+                            # )
+                            # print([player.true_utility.round(6) for player in players])
+                            print("IS PNE:", is_pne)
+                            print("Regrets:", np.mean(regrets), regret_sum / t / N)
+                            # print(
+                            #     "counting best: ",
+                            #     [player.count_best.argmax() for player in players],
+                            # )
+                            print("delta:", res_delta)
 
-                    last_mood = [player.mood for player in players]
-                    last_choice = [player.action for player in players]
-                    last_utility = [player.utility for player in players]
-                    last_is_pne = is_pne
+                    # last_mood = [player.mood for player in players]
+                    # last_choice = [player.action for player in players]
+                    # last_utility = [player.utility for player in players]
+                    # last_is_pne = is_pne
 
             res_arm_rewards = np.concatenate(res_arm_rewards, axis=0)
 
@@ -291,7 +295,7 @@ def main():
         # if args.method == "Ours":
         #     break
 
-    report = {"default": np.mean(pne_nums), "regret": np.mean(regrets_sum)}
+    report = {"pne": np.mean(pne_nums), "default": np.mean(regrets_sum) / T}
     print(report)
 
     if args.nni:

@@ -151,7 +151,6 @@ class TotalReward:
                             pne[i] -= 1
                         else:
                             i += 1
-                print(self.pne_list)
             k = self.pne_list[(self.rank + t) % self.N]
         self.last_pull = k
         return k
@@ -259,14 +258,13 @@ class Ours:
             self.gamma = 0
             self.gammas = np.zeros(K)
 
-        print("Exploring phase:", self.c1)
         self.c2 = c2
         self.c3 = c3
         self.eta = eta
         self.epsilon = epsilon
         self.log_epsilon = np.log(epsilon)
 
-        self.mood = "discontent"
+        self.mood = "content"
         self.action = 0
         self.utility = 0
         self.true_utility = 0
@@ -281,7 +279,7 @@ class Ours:
         self.prob_idx = 0
 
         self.arm_expected_personal_rewards = (
-            np.zeros(self.K) + DENOMINATOR_DELTA / self.K
+            0.5 * np.ones(self.K) + DENOMINATOR_DELTA / self.K
         )
         self.arm_expected_personal_rewards_count = np.zeros(self.K)
 
@@ -310,6 +308,21 @@ class Ours:
                 if self.debug:
                     self.mu_hat = self.loop.mu
                 print(self.loop.mu, self.mu_hat)
+            if np.max(self.count_best) < 5:
+                pne, z, _ = calculate_PNE(self.mu_hat, self.N)
+                pne_list = []
+                self.arm_expected_personal_rewards = self.mu_hat.copy()
+                self.arm_expected_personal_rewards_count = np.ones(self.K) * 10
+                i = 0
+                while i < pne.shape[0]:
+                    if pne[i] > 0:
+                        pne_list.append(i)
+                        pne[i] -= 1
+                    else:
+                        i += 1
+                self.count_best[pne_list[self.rank]] += 10
+                self.action = pne_list[self.rank]
+                self.mood = "content"
             if self.remaining == 0:
                 if self.phase == "exploiting":
                     self.round += 1
@@ -334,19 +347,33 @@ class Ours:
                     )
             else:
                 if self.mood == "discontent":
+                    p = self.arm_expected_personal_rewards
+                    p = p - np.max(p)
+                    p = p / (-np.min(p) - 1e-6) * 5
+                    p = np.exp(p)
+                    p = p / np.sum(p)
                     k = np.random.choice(
                         self.K,
-                        p=self.arm_expected_personal_rewards
-                        / (np.sum(self.arm_expected_personal_rewards)),
+                        p=p,
                     )
                 elif self.mood == "content":
                     log_p = self.next_log_prob()
                     if log_p >= self.log_epsilon:
                         k = self.action
                     else:
-                        k = np.random.randint(0, self.K - 1)
-                        if k >= self.action:
-                            k += 1
+                        p = self.arm_expected_personal_rewards * self.N / self.K
+                        p = p - np.max(p)
+                        p = p / (-np.min(p) - 1e-6) * 5
+                        p = np.exp(p)
+                        p = p / np.sum(p)
+                        k = np.random.choice(
+                            self.K,
+                            p=p,
+                        )
+                        k = np.random.choice(
+                            self.K,
+                            p=p,
+                        )
                 else:
                     k = self.action
 
